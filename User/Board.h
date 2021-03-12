@@ -9,7 +9,7 @@
 //#define USE_SYSTICK_IRQ
 
 // ADC config
-//#define ADC_VREF	        3300
+#define ADC_VREF	        3300
 
 // GPIO config
 //#define USE_GPIO_IRQS
@@ -20,20 +20,55 @@
 //#define USE_TIM2
 
 // UART config
-//#define UART1_GPIO		GPIOA
-//#define UART1_PINS		(GPIO_PIN_9 | GPIO_PIN_10)
-//#define UART1_AF		    GPIO_AF4_USART1
-//#define UART_BFR_SIZE     128
+#define UART2_GPIO		GPIOA
+#define UART2_PINS		(GPIO_PIN_2 | GPIO_PIN_3)
+#define UART2_AF		GPIO_AF4_USART2
+#define UART_BFR_SIZE   128
 
 // SPI config
-//#define SPI1_GPIO		    GPIOB
-//#define SPI1_PINS		    (GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5)
-//#define SPI1_AF			GPIO_AF0_SPI1
+#define SPI1_GPIO		GPIOB
+#define SPI1_PINS		(GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5)
+#define SPI1_AF			GPIO_AF0_SPI1
+#define SPI_CS_GPIO		GPIOA
+#define SPI_CS_PIN		GPIO_PIN_15
 
-// CAN config
-//#define CAN_GPIO			GPIOB
-//#define CAN_PINS			(GPIO_PIN_8 | GPIO_PIN_9)
-//#define CAN_AF			GPIO_AF4_CAN
-//#define CAN_DUAL_FIFO
+// I2C config
+#define I2C1_GPIO		GPIOB
+#define I2C1_PINS		(GPIO_PIN_6 | GPIO_PIN_7)
+#define I2C1_AF			GPIO_AF1_I2C1
+
+// BSPI config
+#define BSPI_GPIO		GPIOA
+#define BSPI_MISO		GPIO_PIN_4
+#define BSPI_MOSI		GPIO_PIN_7
+#define BSPI_SCK		GPIO_PIN_6
+
+// GPIO config
+#define LED_GRN_GPIO	GPIOC
+#define LED_GRN_PIN		GPIO_PIN_15
+#define LED_RED_GPIO	GPIOC
+#define LED_RED_PIN		GPIO_PIN_14
+
+#define VOUT_EN_GPIO	GPIOA
+#define VOUT_EN_PIN		GPIO_PIN_10
+
+#define	MCP425_CS_GPIO	GPIOA
+#define MCP425_CS_PIN	GPIO_PIN_5
+
+#define PX_GPIO			GPIOA
+#define P0_PIN			GPIO_PIN_0
+#define P1_PIN			GPIO_PIN_3
+#define P2_PIN			GPIO_PIN_2
+#define P3_PIN			GPIO_PIN_1
+
+#define P0_AIN			ADC_CHANNEL_0
+#define P1_AIN			ADC_CHANNEL_3
+#define P2_AIN			ADC_CHANNEL_2
+#define P3_AIN			ADC_CHANNEL_1
+
+#define BUS_SPI			SPI_1
+#define BUS_I2C			I2C_1
+#define BUS_UART		UART_2
+
 
 #endif /* BOARD_H */

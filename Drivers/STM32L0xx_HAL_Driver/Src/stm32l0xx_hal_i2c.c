@@ -592,7 +592,7 @@ HAL_StatusTypeDef HAL_I2C_DeInit(I2C_HandleTypeDef *hi2c)
   __HAL_I2C_DISABLE(hi2c);
 
 #if (USE_HAL_I2C_REGISTER_CALLBACKS == 1)
-  if (hi2c->MspDeInitCallback == NULL)
+  if (hi2c->MspDeInitCallback == NULL)f
   {
     hi2c->MspDeInitCallback = HAL_I2C_MspDeInit; /* Legacy weak MspDeInit  */
   }

@@ -8,8 +8,6 @@
 #include "MCP425.h"
 
 
-
-
 int main(void)
 {
 	CORE_Init();
@@ -32,7 +30,7 @@ int main(void)
 	uint8_t tx[1] = { 0x75 };
 	uint8_t rx[1];
 
-	if (I2C_TxRx(BUS_I2C, 0x68, tx, sizeof(tx), rx, sizeof(rx)) && rx[0] == 0x68)
+	if (I2C_Transfer(BUS_I2C, 0x68, tx, sizeof(tx), rx, sizeof(rx)) && rx[0] == 0x68)
 	{
 		GPIO_Set(LED_GRN_GPIO, LED_GRN_PIN);
 	}

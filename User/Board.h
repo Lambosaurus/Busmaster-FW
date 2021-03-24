@@ -6,18 +6,18 @@
 
 // Core config
 //#define CORE_USE_HSE
-//#define USE_SYSTICK_IRQ
+//#define CORE_USE_TICK_IRQ
 
 // ADC config
 #define ADC_VREF	        3300
 
 // GPIO config
-//#define USE_GPIO_IRQS
-//#define USE_EXTI_0 
+//#define GPIO_USE_IRQS
+//#define GPIO_IRQ0_ENABLE
 
 // TIM config
-//#define USE_TIM_IRQS
-//#define USE_TIM2
+//#define TIM_USE_IRQS
+//#define TIM2_ENABLE
 
 // UART config
 #define UART2_GPIO		GPIOA
@@ -36,6 +36,7 @@
 #define I2C1_GPIO		GPIOB
 #define I2C1_PINS		(GPIO_PIN_6 | GPIO_PIN_7)
 #define I2C1_AF			GPIO_AF1_I2C1
+//#define I2C_USE_FASTMODEPLUS
 
 // BSPI config
 #define BSPI_GPIO		GPIOA

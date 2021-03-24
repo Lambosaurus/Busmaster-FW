@@ -60,7 +60,7 @@ bool MCP425_Init(void)
 
 void MCP425_Deinit(void)
 {
-	GPIO_Disable(MCP425_CS_GPIO, MCP425_CS_PIN);
+	GPIO_Deinit(MCP425_CS_GPIO, MCP425_CS_PIN);
 	BSPI_Deinit();
 }
 
@@ -111,7 +111,7 @@ static uint32_t MCP425_Read(uint32_t reg)
 			0
 	};
 	uint8_t rx[2];
-	BSPI_TxRx(tx, rx, sizeof(tx));
+	BSPI_Transfer(tx, rx, sizeof(tx));
 
 	MCP425_Deselect();
 
@@ -127,7 +127,7 @@ static void MCP425_Write(uint32_t reg, uint32_t value)
 		value
 	};
 
-	BSPI_Tx(tx, sizeof(tx));
+	BSPI_Write(tx, sizeof(tx));
 
 	MCP425_Deselect();
 }

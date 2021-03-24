@@ -42,10 +42,10 @@ void BSPI_Init(uint32_t bitrate)
 
 void BSPI_Deinit(void)
 {
-	GPIO_Disable(BSPI_GPIO, BSPI_MISO | BSPI_MOSI | BSPI_SCK);
+	GPIO_Deinit(BSPI_GPIO, BSPI_MISO | BSPI_MOSI | BSPI_SCK);
 }
 
-void BSPI_Tx(const uint8_t * data, uint32_t count)
+void BSPI_Write(const uint8_t * data, uint32_t count)
 {
 	for (uint32_t i = 0; i < count; i++)
 	{
@@ -53,7 +53,7 @@ void BSPI_Tx(const uint8_t * data, uint32_t count)
 	}
 }
 
-void BSPI_Rx(uint8_t * data, uint32_t count)
+void BSPI_Read(uint8_t * data, uint32_t count)
 {
 	for (uint32_t i = 0; i < count; i++)
 	{
@@ -61,7 +61,7 @@ void BSPI_Rx(uint8_t * data, uint32_t count)
 	}
 }
 
-void BSPI_TxRx(const uint8_t * txdata, uint8_t * rxdata, uint32_t count)
+void BSPI_Transfer(const uint8_t * txdata, uint8_t * rxdata, uint32_t count)
 {
 	for (uint32_t i = 0; i < count; i++)
 	{

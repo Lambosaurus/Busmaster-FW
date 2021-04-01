@@ -32,6 +32,10 @@
 #define SPI_CS_GPIO		GPIOA
 #define SPI_CS_PIN		GPIO_PIN_15
 
+// USB config
+#define USB_ENABLE
+#define USB_CLASS_CDC
+
 // I2C config
 #define I2C1_GPIO		GPIOB
 #define I2C1_PINS		(GPIO_PIN_6 | GPIO_PIN_7)

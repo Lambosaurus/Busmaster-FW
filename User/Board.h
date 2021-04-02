@@ -35,6 +35,7 @@
 // USB config
 #define USB_ENABLE
 #define USB_CLASS_CDC
+#define USB_CDC_BFR_SIZE	256
 
 // I2C config
 #define I2C1_GPIO		GPIOB

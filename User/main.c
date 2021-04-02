@@ -3,10 +3,57 @@
 #include "GPIO.h"
 #include "UART.h"
 #include "I2C.h"
-
+#include "USB.h"
 
 #include "MCP425.h"
+#include <string.h>
+#include <stdio.h>
 
+
+typedef struct {
+	uint32_t count;
+	char bfr[256];
+} Line_t;
+
+static void HandleLine(const char * line, uint32_t count)
+{
+	char reply[256];
+	uint32_t size = snprintf(reply, sizeof(reply), "Read: \"%s\"\r\n", line);
+	USB_Write((uint8_t *)reply, size);
+}
+
+static void BuildLine( Line_t * line, const uint8_t * data, uint32_t count )
+{
+	for (uint32_t i = 0; i < count; i++)
+	{
+		char ch = (char)data[i];
+		switch (ch)
+		{
+		case 0:
+		case '\n':
+		case '\r':
+			line->bfr[line->count] = 0;
+			if (line->count)
+			{
+				HandleLine(line->bfr, line->count);
+			}
+			line->count = 0;
+			break;
+		default:
+			if (line->count < sizeof(line->bfr) - 1)
+			{
+				// Need to leave room for at least a null char.
+				line->bfr[line->count++] = ch;
+			}
+			else
+			{
+				// Discard the line
+				line->count = 0;
+			}
+			break;
+		}
+	}
+}
 
 int main(void)
 {
@@ -25,23 +72,20 @@ int main(void)
 
 	I2C_Init(BUS_I2C, I2C_Mode_Fast);
 
-	CORE_Delay(100);
+	USB_Init();
 
-	uint8_t tx[1] = { 0x75 };
-	uint8_t rx[1];
-
-	if (I2C_Transfer(BUS_I2C, 0x68, tx, sizeof(tx), rx, sizeof(rx)) && rx[0] == 0x68)
-	{
-		GPIO_Set(LED_GRN_GPIO, LED_GRN_PIN);
-	}
-	else
-	{
-		GPIO_Set(LED_RED_GPIO, LED_RED_PIN);
-	}
-
+	Line_t line;
+	line.count = 0;
 
 	while(1)
 	{
+		uint8_t bfr[32];
+		uint32_t count = USB_Read(bfr, sizeof(bfr));
+		if (count)
+		{
+			BuildLine(&line, bfr, count);
+		}
+
 		CORE_Idle();
 	}
 }

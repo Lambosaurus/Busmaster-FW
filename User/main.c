@@ -10,50 +10,57 @@
 #include <stdio.h>
 
 
-typedef struct {
-	uint32_t count;
-	char bfr[256];
-} Line_t;
 
-static void HandleLine(const char * line, uint32_t count)
+#include "Command.h"
+
+
+void Testcommand(CmdLine_t * line, CmdArgValue_t * argv)
 {
-	char reply[256];
-	uint32_t size = snprintf(reply, sizeof(reply), "Read: \"%s\"\r\n", line);
-	USB_Write((uint8_t *)reply, size);
+	uint32_t n1 = argv[0].number;
+	uint32_t n2 = argv[1].number;
+	Cmd_Printf(line, "Args %d, %d\r\n", n1, n2);
 }
 
-static void BuildLine( Line_t * line, const uint8_t * data, uint32_t count )
-{
-	for (uint32_t i = 0; i < count; i++)
+CmdArg_t gI2cInitArgs[] = {
 	{
-		char ch = (char)data[i];
-		switch (ch)
-		{
-		case 0:
-		case '\n':
-		case '\r':
-			line->bfr[line->count] = 0;
-			if (line->count)
-			{
-				HandleLine(line->bfr, line->count);
-			}
-			line->count = 0;
-			break;
-		default:
-			if (line->count < sizeof(line->bfr) - 1)
-			{
-				// Need to leave room for at least a null char.
-				line->bfr[line->count++] = ch;
-			}
-			else
-			{
-				// Discard the line
-				line->count = 0;
-			}
-			break;
+		.name = "speed",
+		.type = CmdArg_Number,
+	},
+	{
+		.name = "pullup",
+		.type = CmdArg_Number,
+	}
+};
+
+CmdNode_t gI2cFunctions[] = {
+	{
+		.type = CmdNode_Function,
+		.name = "init",
+		.func = {
+			.args = gI2cInitArgs,
+			.arglen = LENGTH(gI2cInitArgs),
+			.callback = Testcommand,
 		}
 	}
-}
+};
+
+CmdNode_t gI2cMenu = {
+	.type = CmdNode_Menu,
+	.name = "i2c",
+	.menu = {
+		.count = LENGTH(gI2cFunctions),
+		.nodes = gI2cFunctions,
+	}
+};
+
+CmdNode_t gRootMenu = {
+	.type = CmdNode_Menu,
+	.name = "root",
+	.menu = {
+		.nodes = &gI2cMenu,
+		.count = 1,
+	}
+};
 
 int main(void)
 {
@@ -74,8 +81,9 @@ int main(void)
 
 	USB_Init();
 
-	Line_t line;
-	line.count = 0;
+	char buffer[256];
+	CmdLine_t line;
+	Cmd_Init(&line, &gRootMenu, USB_Write, buffer, sizeof(buffer));
 
 	while(1)
 	{
@@ -83,7 +91,7 @@ int main(void)
 		uint32_t count = USB_Read(bfr, sizeof(bfr));
 		if (count)
 		{
-			BuildLine(&line, bfr, count);
+			Cmd_Parse(&line, bfr, count);
 		}
 
 		CORE_Idle();

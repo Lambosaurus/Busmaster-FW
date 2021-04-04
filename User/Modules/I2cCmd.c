@@ -51,7 +51,7 @@ const static CmdArg_t gI2cWriteArgs[] = {
 		.type = CmdArg_Number,
 	},
 	{
-		.name = "payload",
+		.name = "tx-payload",
 		.type = CmdArg_Bytes,
 	}
 };
@@ -62,7 +62,7 @@ const static CmdArg_t gI2cReadArgs[] = {
 		.type = CmdArg_Number,
 	},
 	{
-		.name = "count",
+		.name = "rx-count",
 		.type = CmdArg_Number,
 	}
 };
@@ -73,11 +73,11 @@ const static CmdArg_t gI2cTransferArgs[] = {
 		.type = CmdArg_Number,
 	},
 	{
-		.name = "payload",
+		.name = "tx-payload",
 		.type = CmdArg_Bytes,
 	},
 	{
-		.name = "count",
+		.name = "rx-count",
 		.type = CmdArg_Number,
 	}
 };

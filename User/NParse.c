@@ -17,6 +17,8 @@
  * PRIVATE VARIABLES
  */
 
+static bool NParse_FixedUint(const char ** str, uint32_t length, uint32_t * value);
+
 /*
  * PUBLIC FUNCTIONS
  */
@@ -26,24 +28,27 @@ bool NParse_Kuint(const char ** str, uint32_t * value)
 	uint32_t prefix;
 	if (NParse_Uint(str, &prefix))
 	{
-		uint32_t mul = 1;
+		uint32_t power = 0;
 		char ch = **str;
 		if (ch == 'k' || ch == 'K')
 		{
-			mul = 1000;
+			power = 3;
 		}
 		else if (ch == 'm' || ch == 'M')
 		{
-			mul = 1000000;
+			power = 6;
 		}
-		if (mul > 1)
+		if (power > 0)
 		{
 			*str += 1;
-			prefix *= mul;
-			uint32_t suffix;
-			if (NParse_Uint(str, &suffix))
+			for (uint32_t p = 0; p < power; p++)
 			{
-				// TODO: Fix this JANK
+				prefix *= 10;
+			}
+
+			uint32_t suffix;
+			if (NParse_FixedUint(str, power, &suffix))
+			{
 				prefix += suffix;
 			}
 		}
@@ -93,6 +98,27 @@ bool NParse_Bytes(const char ** str, uint8_t * value, uint32_t size, uint32_t * 
  * PRIVATE FUNCTIONS
  */
 
+static bool NParse_FixedUint(const char ** str, uint32_t length, uint32_t * value)
+{
+	const char * start = *str;
+	if (!NParse_Uint(str, value))
+	{
+		return false;
+	}
+
+	uint32_t count = *str - start;
+	while (count > length)
+	{
+		count -= 1;
+		*value /= 10;
+	}
+	while (count < length)
+	{
+		count += 1;
+		*value *= 10;
+	}
+	return true;
+}
 
 
 /*

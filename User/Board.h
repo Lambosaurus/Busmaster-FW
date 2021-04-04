@@ -41,7 +41,7 @@
 #define I2C1_GPIO		GPIOB
 #define I2C1_PINS		(GPIO_PIN_6 | GPIO_PIN_7)
 #define I2C1_AF			GPIO_AF1_I2C1
-//#define I2C_USE_FASTMODEPLUS
+#define I2C_USE_FASTMODEPLUS
 
 // BSPI config
 #define BSPI_GPIO		GPIOA

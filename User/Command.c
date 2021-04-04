@@ -201,12 +201,36 @@ static const char * Cmd_ArgTypeStr(CmdArg_t * arg)
 	}
 }
 
+static void Cmd_PrintMenuHelp(CmdLine_t * line, CmdNode_t * node)
+{
+	Cmd_Printf(line, "<menu: %s> contains %d nodes:\r\n", node->name, node->menu.count);
+	for (uint32_t i = 0; i < node->menu.count; i++)
+	{
+		CmdNode_t * child = &node->menu.nodes[i];
+		Cmd_Printf(line, " - %s\r\n", child->name);
+	}
+}
+
+static void Cmd_PrintFunctionHelp(CmdLine_t * line, CmdNode_t * node)
+{
+	Cmd_Printf(line, "<func: %s> takes %d arguments:\r\n", node->name, node->func.arglen);
+	for (uint32_t argn = 0; argn < node->func.arglen; argn++)
+	{
+		CmdArg_t * arg = &node->func.args[argn];
+		Cmd_Printf(line, " - <%s: %s>\r\n", Cmd_ArgTypeStr(arg), arg->name);
+	}
+}
+
 static void Cmd_RunMenu(CmdLine_t * line, CmdNode_t * node, const char * str)
 {
 	const char * item = Cmd_NextToken(&str);
 	if (item == NULL)
 	{
-		Cmd_Printf(line, "'%s' is a <menu>\r\n", node->name);
+		Cmd_Printf(line, "<menu: %s>\r\n", node->name);
+	}
+	if (strcmp("?", item) == 0)
+	{
+		Cmd_PrintMenuHelp(line, node);
 	}
 	else
 	{
@@ -221,7 +245,7 @@ static void Cmd_RunMenu(CmdLine_t * line, CmdNode_t * node, const char * str)
 		}
 		if (child == NULL)
 		{
-			Cmd_Printf(line, "'%s' is not an item within '%s'\r\n", item, node->name);
+			Cmd_Printf(line, "'%s' is not an item within <menu: %s>\r\n", item, node->name);
 		}
 		else
 		{
@@ -234,19 +258,34 @@ static void Cmd_RunFunction(CmdLine_t * line, CmdNode_t * node, const char * str
 {
 	CmdArgValue_t args[CMD_MAX_ARGS];
 	uint32_t argn = 0;
+
+	const char * token = Cmd_NextToken(&str);
+
+	if (token != NULL && strcmp("?", token) == 0)
+	{
+		Cmd_PrintFunctionHelp(line, node);
+		return;
+	}
+
 	for (argn = 0; argn < node->func.arglen; argn++)
 	{
 		CmdArg_t * arg = &node->func.args[argn];
-		const char * token = Cmd_NextToken(&str);
+
+		if (argn > 0)
+		{
+			// The first token is checked at the start, in case its a '?'
+			token = Cmd_NextToken(&str);
+		}
+
 		if (token == NULL || !Cmd_ParseArg(arg, args + argn, token))
 		{
-			Cmd_Printf(line, "Argument %d: '%s' must be <%s>\r\n", argn+1, arg->name, Cmd_ArgTypeStr(arg));
+			Cmd_Printf(line, "Argument %d is <%s: %s>\r\n", argn+1, Cmd_ArgTypeStr(arg), arg->name);
 			return;
 		}
 	}
 	if (argn != node->func.arglen)
 	{
-		Cmd_Printf(line, "%d arguments required by '%s'\r\n", node->func.arglen, node->name);
+		Cmd_Printf(line, "<func: %s> required %d arguments\r\n", node->name, node->func.arglen);
 	}
 	else
 	{

@@ -9,7 +9,7 @@
 
 CmdNode_t gRootItems[1];
 
-CmdNode_t gRootMenu = {
+const CmdNode_t gRootMenu = {
 	.type = CmdNode_Menu,
 	.name = "root",
 	.menu = {
@@ -17,6 +17,8 @@ CmdNode_t gRootMenu = {
 		.count = LENGTH(gRootItems),
 	}
 };
+
+static uint8_t gMemory[4096];
 
 int main(void)
 {
@@ -28,9 +30,8 @@ int main(void)
 
 	I2CCMD_InitMenu(&gRootItems[0]);
 
-	char buffer[256];
 	CmdLine_t line;
-	Cmd_Init(&line, &gRootMenu, USB_Write, buffer, sizeof(buffer));
+	Cmd_Init(&line, &gRootMenu, USB_Write, (void*)gMemory, sizeof(gMemory));
 
 	USB_Init();
 

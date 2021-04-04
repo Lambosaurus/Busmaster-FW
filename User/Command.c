@@ -10,6 +10,8 @@
  * PRIVATE DEFINITIONS
  */
 
+#define CMD_MAX_LINE	256
+
 /*
  * PRIVATE TYPES
  */
@@ -18,14 +20,20 @@ typedef struct {
 	uint32_t index;
 	const char * str;
 	uint32_t size;
-	bool quoted;
+	bool delimiter;
 }Token_t;
+
+typedef struct {
+	const char * str;
+	char delimiter;
+	uint32_t size;
+}CmdToken_t;
 
 /*
  * PRIVATE PROTOTYPES
  */
 
-static void Cmd_Run(CmdLine_t * line, CmdNode_t * node, const char * str);
+static void Cmd_Run(CmdLine_t * line, const CmdNode_t * node, const char * str);
 static void Cmd_Execute(CmdLine_t * line, const char * str);
 
 /*
@@ -36,13 +44,48 @@ static void Cmd_Execute(CmdLine_t * line, const char * str);
  * PUBLIC FUNCTIONS
  */
 
-void Cmd_Init(CmdLine_t * line, CmdNode_t * root, void (*print)(const uint8_t * data, uint32_t size), char * buffer, uint32_t size)
+void Cmd_Init(CmdLine_t * line, const CmdNode_t * root, void (*print)(const uint8_t * data, uint32_t size), void * memory, uint32_t memsize)
 {
 	line->bfr.index = 0;
-	line->bfr.data = buffer;
-	line->bfr.size = size;
+	line->bfr.data = memory;
+	line->bfr.size = CMD_MAX_LINE;
 	line->root = root;
 	line->print = print;
+
+	line->mem.heap = memory + CMD_MAX_LINE;
+	line->mem.size = memsize - CMD_MAX_LINE;
+	line->mem.head = line->mem.heap;
+}
+
+uint32_t Cmd_Memfree(CmdLine_t * line)
+{
+	return line->mem.size - (line->mem.head - line->mem.heap);
+}
+
+void * Cmd_Malloc(CmdLine_t * line, uint32_t size)
+{
+	if (Cmd_Memfree(line) < size)
+	{
+		char * warn = "MEMORY OVERRUN\r\n";
+		line->print((uint8_t *)warn, strlen(warn));
+	}
+	// Ignore overrun and do it anyway.....
+	void * ptr = line->mem.head;
+	line->mem.head += size;
+	return ptr;
+}
+
+void Cmd_FreeAll(CmdLine_t * line)
+{
+	line->mem.head = line->mem.heap;
+}
+
+void Cmd_Free(CmdLine_t * line, void * ptr)
+{
+	if (ptr >= line->mem.heap)
+	{
+		line->mem.head = ptr;
+	}
 }
 
 void Cmd_Parse(CmdLine_t * line, const uint8_t * data, uint32_t count)
@@ -82,52 +125,56 @@ void Cmd_Printf(CmdLine_t * line, const char * fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    char bfr[256];
-    uint32_t written = vsnprintf(bfr, sizeof(bfr), fmt, ap);
+    // Take whatevers left - because we will immediately free it.
+    uint32_t free = Cmd_Memfree(line);
+    char * bfr = Cmd_Malloc(line, free);
+    uint32_t written = vsnprintf(bfr, free, fmt, ap);
     va_end(ap);
     line->print((uint8_t *)bfr, written);
+    Cmd_Free(line, bfr);
 }
 
 /*
  * PRIVATE FUNCTIONS
  */
 
-static const char * Cmd_ParseToken(Token_t * token, const char * str)
+static bool Cmd_ParseToken(const char ** str, CmdToken_t * token)
 {
+	const char * head = *str;
 	while (1)
 	{
-		// Find the first charachter
-		char ch = *str;
+		// Find the first char
+		char ch = *head;
 		if (ch == ' ' || ch == '\t')
 		{
-			str++;
+			head++;
 		}
 		else if (ch == 0)
 		{
-			return NULL;
+			return false;
 		}
 		else
 		{
 			break;
 		}
 	}
-	if (*str == '"')
+	char startc = *head;
+	if (startc == '"' || startc == '\'' || startc == '`')
 	{
+		token->delimiter = startc;
 		// Check if its a quoted token
-		str++;
-		token->str = str;
+		head++;
+		token->str = head;
 		while (1)
 		{
-			char ch = *str;
-			if (ch == '"')
+			char ch = *head;
+			if (ch == startc)
 			{
-				const char * end = str;
-				token->size = end - token->str;
-				return str + 1;
+				break;
 			}
 			else if (ch == 0)
 			{
-				return NULL;
+				return false;
 			}
 			else
 			{
@@ -137,58 +184,74 @@ static const char * Cmd_ParseToken(Token_t * token, const char * str)
 	}
 	else // Non quoted token
 	{
-		token->str = str;
+		token->delimiter = 0;
+		token->str = head;
 		while (1)
 		{
-			char ch = *str;
+			char ch = *head;
 			if (ch == ' ' || ch == '\t' || ch == 0)
 			{
-				const char * end = str;
-				token->size = end - token->str;
-				return str;
+				break;
 			}
 			else
 			{
-				str++;
+				head++;
 			}
 		}
 	}
+
+	token->size = head - token->str;
+	*str = head;
+	return true;
 }
 
-static const char * Cmd_NextToken(const char ** str)
+static bool Cmd_NextToken(CmdLine_t * line, const char ** str, CmdToken_t * token)
 {
-	static char bfr[256];
-	Token_t token;
-	const char * end = Cmd_ParseToken(&token, *str);
-	if (end == NULL)
+	if (Cmd_ParseToken(str, token))
 	{
-		return NULL;
+		// Copy token from a ref to an allocated buffer
+		char * bfr = Cmd_Malloc(line, token->size + 1);
+		memcpy(bfr, token->str, token->size);
+		bfr[token->size] = 0;
+		token->str = bfr;
+		return true;
 	}
-	*str = end;
-	memcpy(bfr, token.str, token.size);
-	bfr[token.size] = 0;
-	return bfr;
+	return false;
 }
 
 static void Cmd_Execute(CmdLine_t * line, const char * str)
 {
 	Cmd_Run(line, line->root, str);
+	Cmd_FreeAll(line);
 }
 
-static bool Cmd_ParseArg(CmdArg_t * arg, CmdArgValue_t * value, const char * str)
+static bool Cmd_ParseArg(CmdLine_t * line, const CmdArg_t * arg, CmdArgValue_t * value, CmdToken_t * token)
 {
+	const char * str = token->str;
 	switch (arg->type)
 	{
 	case CmdArg_Number:
 		return NParse_Kuint(&str, &value->number) && (*str == 0);
 	case CmdArg_Bytes:
-		return NParse_Bytes(&str, value->bytes.data, 256, &value->bytes.size) && (*str == 0);
+	{
+		uint32_t maxbytes = token->size;
+		uint8_t * bfr = Cmd_Malloc(line, maxbytes);
+		value->bytes.data = bfr;
+		if (token->delimiter)
+		{
+			return NParse_String(&str, (char *)bfr, maxbytes, &value->bytes.size) && (*str == 0);
+		}
+		else
+		{
+			return NParse_Bytes(&str, bfr, maxbytes, &value->bytes.size) && (*str == 0);
+		}
+	}
 	default:
 		return false;
 	}
 }
 
-static const char * Cmd_ArgTypeStr(CmdArg_t * arg)
+static const char * Cmd_ArgTypeStr(const CmdArg_t * arg)
 {
 	switch (arg->type)
 	{
@@ -201,43 +264,43 @@ static const char * Cmd_ArgTypeStr(CmdArg_t * arg)
 	}
 }
 
-static void Cmd_PrintMenuHelp(CmdLine_t * line, CmdNode_t * node)
+static void Cmd_PrintMenuHelp(CmdLine_t * line, const CmdNode_t * node)
 {
 	Cmd_Printf(line, "<menu: %s> contains %d nodes:\r\n", node->name, node->menu.count);
 	for (uint32_t i = 0; i < node->menu.count; i++)
 	{
-		CmdNode_t * child = &node->menu.nodes[i];
+		const CmdNode_t * child = &node->menu.nodes[i];
 		Cmd_Printf(line, " - %s\r\n", child->name);
 	}
 }
 
-static void Cmd_PrintFunctionHelp(CmdLine_t * line, CmdNode_t * node)
+static void Cmd_PrintFunctionHelp(CmdLine_t * line, const CmdNode_t * node)
 {
 	Cmd_Printf(line, "<func: %s> takes %d arguments:\r\n", node->name, node->func.arglen);
 	for (uint32_t argn = 0; argn < node->func.arglen; argn++)
 	{
-		CmdArg_t * arg = &node->func.args[argn];
+		const CmdArg_t * arg = &node->func.args[argn];
 		Cmd_Printf(line, " - <%s: %s>\r\n", Cmd_ArgTypeStr(arg), arg->name);
 	}
 }
 
-static void Cmd_RunMenu(CmdLine_t * line, CmdNode_t * node, const char * str)
+static void Cmd_RunMenu(CmdLine_t * line, const CmdNode_t * node, const char * str)
 {
-	const char * item = Cmd_NextToken(&str);
-	if (item == NULL)
+	CmdToken_t token;
+	if (!Cmd_NextToken(line, &str, &token))
 	{
 		Cmd_Printf(line, "<menu: %s>\r\n", node->name);
 	}
-	if (strcmp("?", item) == 0)
+	if (strcmp("?", token.str) == 0)
 	{
 		Cmd_PrintMenuHelp(line, node);
 	}
 	else
 	{
-		CmdNode_t * child = NULL;
+		const CmdNode_t * child = NULL;
 		for (uint32_t i = 0; i < node->menu.count; i++)
 		{
-			if (strcmp(node->menu.nodes[i].name, item) == 0)
+			if (strcmp(node->menu.nodes[i].name, token.str) == 0)
 			{
 				child = &node->menu.nodes[i];
 				break;
@@ -245,23 +308,26 @@ static void Cmd_RunMenu(CmdLine_t * line, CmdNode_t * node, const char * str)
 		}
 		if (child == NULL)
 		{
-			Cmd_Printf(line, "'%s' is not an item within <menu: %s>\r\n", item, node->name);
+			Cmd_Printf(line, "'%s' is not an item within <menu: %s>\r\n", token.str, node->name);
 		}
 		else
 		{
+			// we may as well free this token before we run the next menu.
+			Cmd_Free(line, (void*)token.str);
 			Cmd_Run(line, child, str);
 		}
 	}
 }
 
-static void Cmd_RunFunction(CmdLine_t * line, CmdNode_t * node, const char * str)
+static void Cmd_RunFunction(CmdLine_t * line, const CmdNode_t * node, const char * str)
 {
 	CmdArgValue_t args[CMD_MAX_ARGS];
 	uint32_t argn = 0;
 
-	const char * token = Cmd_NextToken(&str);
+	CmdToken_t token;
+	bool token_ok = Cmd_NextToken(line, &str, &token);
 
-	if (token != NULL && strcmp("?", token) == 0)
+	if (token_ok && strcmp("?", token.str) == 0)
 	{
 		Cmd_PrintFunctionHelp(line, node);
 		return;
@@ -269,19 +335,21 @@ static void Cmd_RunFunction(CmdLine_t * line, CmdNode_t * node, const char * str
 
 	for (argn = 0; argn < node->func.arglen; argn++)
 	{
-		CmdArg_t * arg = &node->func.args[argn];
+		const CmdArg_t * arg = &node->func.args[argn];
 
 		if (argn > 0)
 		{
-			// The first token is checked at the start, in case its a '?'
-			token = Cmd_NextToken(&str);
+			// We already parsed our first token.
+			token_ok = Cmd_NextToken(line, &str, &token);
 		}
 
-		if (token == NULL || !Cmd_ParseArg(arg, args + argn, token))
+		if (!(token_ok && Cmd_ParseArg(line, arg, args + argn, &token)))
 		{
 			Cmd_Printf(line, "Argument %d is <%s: %s>\r\n", argn+1, Cmd_ArgTypeStr(arg), arg->name);
 			return;
 		}
+
+		// Unfortunately we cannot free our tokens, as args will malloc on top of them.
 	}
 	if (argn != node->func.arglen)
 	{
@@ -293,7 +361,7 @@ static void Cmd_RunFunction(CmdLine_t * line, CmdNode_t * node, const char * str
 	}
 }
 
-static void Cmd_Run(CmdLine_t * line, CmdNode_t * node, const char * str)
+static void Cmd_Run(CmdLine_t * line, const CmdNode_t * node, const char * str)
 {
 	switch (node->type)
 	{

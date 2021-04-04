@@ -47,11 +47,11 @@ typedef struct CmdNode_s {
 	uint8_t type;
 	union {
 		struct {
-			CmdNode_t * nodes;
+			const CmdNode_t * nodes;
 			uint32_t count;
 		}menu;
 		struct {
-			CmdArg_t * args;
+			const CmdArg_t * args;
 			uint32_t arglen;
 			void (*callback)(CmdLine_t * line, CmdArgValue_t * argv);
 		}func;
@@ -65,15 +65,23 @@ typedef struct CmdLine_s {
 		char * data;
 	}bfr;
 	void (*print)(const uint8_t * data, uint32_t size);
-	CmdNode_t * root;
+	const CmdNode_t * root;
+	struct {
+		void * heap;
+		uint32_t size;
+		void * head;
+	}mem;
 } CmdLine_t;
 
 /*
  * PUBLIC FUNCTIONS
  */
 
-void Cmd_Init(CmdLine_t * line, CmdNode_t * root, void (*print)(const uint8_t * data, uint32_t size), char * buffer, uint32_t size);
+void Cmd_Init(CmdLine_t * line, const CmdNode_t * root, void (*print)(const uint8_t * data, uint32_t size), void * memory, uint32_t size);
 void Cmd_Parse(CmdLine_t * line, const uint8_t * data, uint32_t count);
 void Cmd_Printf(CmdLine_t * line, const char * fmt, ...);
+void * Cmd_Malloc(CmdLine_t * line, uint32_t size);
+void Cmd_FreeAll(CmdLine_t * line);
+void Cmd_Free(CmdLine_t * line, void * ptr);
 
 #endif //COMMAND_H

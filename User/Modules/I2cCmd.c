@@ -3,7 +3,7 @@
 
 #include "MCP425.h"
 #include "I2C.h"
-#include "NParse.h"
+#include "ComCmd.h"
 
 /*
  * PRIVATE DEFINITIONS
@@ -51,7 +51,7 @@ const static CmdArg_t gI2cWriteArgs[] = {
 		.type = CmdArg_Number,
 	},
 	{
-		.name = "tx-payload",
+		.name = "payload",
 		.type = CmdArg_Bytes,
 	}
 };
@@ -62,7 +62,7 @@ const static CmdArg_t gI2cReadArgs[] = {
 		.type = CmdArg_Number,
 	},
 	{
-		.name = "rx-count",
+		.name = "count",
 		.type = CmdArg_Number,
 	}
 };
@@ -73,11 +73,11 @@ const static CmdArg_t gI2cTransferArgs[] = {
 		.type = CmdArg_Number,
 	},
 	{
-		.name = "tx-payload",
+		.name = "payload",
 		.type = CmdArg_Bytes,
 	},
 	{
-		.name = "rx-count",
+		.name = "count",
 		.type = CmdArg_Number,
 	}
 };
@@ -175,7 +175,7 @@ static void I2CCMD_Init(CmdLine_t * line, CmdArgValue_t * argv)
 	{
 		Cmd_Printf(line, "i2c speed truncated to %d\r\n", actual_speed);
 	}
-	Cmd_Printf(line, "ok\r\n");
+	COMCMD_PrintOk(line);
 }
 
 static void I2CCMD_Deinit(CmdLine_t * line, CmdArgValue_t * argv)
@@ -187,14 +187,14 @@ static void I2CCMD_Deinit(CmdLine_t * line, CmdArgValue_t * argv)
 		I2C_Deinit(BUS_I2C);
 		gI2cEnabled = false;
 	}
-	Cmd_Printf(line, "ok\r\n");
+	COMCMD_PrintOk(line);
 }
 
 static void I2CCMD_Scan(CmdLine_t * line, CmdArgValue_t * argv)
 {
 	if (!gI2cEnabled)
 	{
-		Cmd_Printf(line, "i2c not initialised.\r\n");
+		COMCMD_PrintNoInit(line, "i2c");
 		return;
 	}
 
@@ -214,7 +214,7 @@ static void I2CCMD_Write(CmdLine_t * line, CmdArgValue_t * argv)
 {
 	if (!gI2cEnabled)
 	{
-		Cmd_Printf(line, "i2c not initialised.\r\n");
+		COMCMD_PrintNoInit(line, "i2c");
 		return;
 	}
 
@@ -228,11 +228,11 @@ static void I2CCMD_Write(CmdLine_t * line, CmdArgValue_t * argv)
 
 	if (I2C_Write(BUS_I2C, address, txdata->bytes.data, txdata->bytes.size))
 	{
-		Cmd_Printf(line, "%d bytes written\r\n", txdata->bytes.size);
+		COMCMD_PrintWritten(line, txdata->bytes.size);
 	}
 	else
 	{
-		Cmd_Printf(line, "Error\r\n");
+		COMCMD_PrintError(line);
 	}
 }
 
@@ -240,7 +240,7 @@ static void I2CCMD_Read(CmdLine_t * line, CmdArgValue_t * argv)
 {
 	if (!gI2cEnabled)
 	{
-		Cmd_Printf(line, "i2c not initialised.\r\n");
+		COMCMD_PrintNoInit(line, "i2c");
 		return;
 	}
 
@@ -261,14 +261,11 @@ static void I2CCMD_Read(CmdLine_t * line, CmdArgValue_t * argv)
 
 	if (I2C_Read(BUS_I2C, address, rxdata, rxcount))
 	{
-		char * bfr = Cmd_Malloc(line, rxcount*2 + 2);
-		NFormat_Hex(bfr, rxdata, rxcount);
-		Cmd_Printf(line, "Read: %s\r\n", bfr);
-		Cmd_Free(line, bfr);
+		COMCMD_PrintRead(line, rxdata, rxcount);
 	}
 	else
 	{
-		Cmd_Printf(line, "Error\r\n");
+		COMCMD_PrintError(line);
 	}
 }
 
@@ -276,7 +273,7 @@ static void I2CCMD_Transfer(CmdLine_t * line, CmdArgValue_t * argv)
 {
 	if (!gI2cEnabled)
 	{
-		Cmd_Printf(line, "i2c not initialised.\r\n");
+		COMCMD_PrintNoInit(line, "i2c");
 		return;
 	}
 
@@ -298,15 +295,12 @@ static void I2CCMD_Transfer(CmdLine_t * line, CmdArgValue_t * argv)
 
 	if (I2C_Transfer(BUS_I2C, address, txdata->bytes.data, txdata->bytes.size, rxdata, rxcount))
 	{
-		Cmd_Printf(line, "%d bytes written\r\n", txdata->bytes.size);
-		char * bfr = Cmd_Malloc(line, rxcount*2 + 2);
-		NFormat_Hex(bfr, rxdata, rxcount);
-		Cmd_Printf(line, "Read: %s\r\n", bfr);
-		Cmd_Free(line, bfr);
+		COMCMD_PrintWritten(line, txdata->bytes.size);
+		COMCMD_PrintRead(line, rxdata, rxcount);
 	}
 	else
 	{
-		Cmd_Printf(line, "Error\r\n");
+		COMCMD_PrintError(line);
 	}
 }
 

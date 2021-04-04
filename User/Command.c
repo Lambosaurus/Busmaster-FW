@@ -17,13 +17,6 @@
  */
 
 typedef struct {
-	uint32_t index;
-	const char * str;
-	uint32_t size;
-	bool delimiter;
-}Token_t;
-
-typedef struct {
 	const char * str;
 	char delimiter;
 	uint32_t size;
@@ -33,8 +26,19 @@ typedef struct {
  * PRIVATE PROTOTYPES
  */
 
+static void Cmd_FreeAll(CmdLine_t * line);
+
+static bool Cmd_ParseToken(const char ** str, CmdToken_t * token);
+static bool Cmd_NextToken(CmdLine_t * line, const char ** str, CmdToken_t * token);
+static bool Cmd_ParseArg(CmdLine_t * line, const CmdArg_t * arg, CmdArgValue_t * value, CmdToken_t * token);
+static const char * Cmd_ArgTypeStr(const CmdArg_t * arg);
+
+static void Cmd_RunRoot(CmdLine_t * line, const char * str);
+static void Cmd_PrintMenuHelp(CmdLine_t * line, const CmdNode_t * node);
+static void Cmd_PrintFunctionHelp(CmdLine_t * line, const CmdNode_t * node);
+static void Cmd_RunMenu(CmdLine_t * line, const CmdNode_t * node, const char * str);
+static void Cmd_RunFunction(CmdLine_t * line, const CmdNode_t * node, const char * str);
 static void Cmd_Run(CmdLine_t * line, const CmdNode_t * node, const char * str);
-static void Cmd_Execute(CmdLine_t * line, const char * str);
 
 /*
  * PRIVATE VARIABLES
@@ -75,11 +79,6 @@ void * Cmd_Malloc(CmdLine_t * line, uint32_t size)
 	return ptr;
 }
 
-void Cmd_FreeAll(CmdLine_t * line)
-{
-	line->mem.head = line->mem.heap;
-}
-
 void Cmd_Free(CmdLine_t * line, void * ptr)
 {
 	if (ptr >= line->mem.heap)
@@ -101,7 +100,7 @@ void Cmd_Parse(CmdLine_t * line, const uint8_t * data, uint32_t count)
 			line->bfr.data[line->bfr.index] = 0;
 			if (line->bfr.index)
 			{
-				Cmd_Execute(line, line->bfr.data);
+				Cmd_RunRoot(line, line->bfr.data);
 			}
 			line->bfr.index = 0;
 			break;
@@ -137,6 +136,13 @@ void Cmd_Printf(CmdLine_t * line, const char * fmt, ...)
 /*
  * PRIVATE FUNCTIONS
  */
+
+
+static void Cmd_FreeAll(CmdLine_t * line)
+{
+	line->mem.head = line->mem.heap;
+}
+
 
 static bool Cmd_ParseToken(const char ** str, CmdToken_t * token)
 {
@@ -219,7 +225,7 @@ static bool Cmd_NextToken(CmdLine_t * line, const char ** str, CmdToken_t * toke
 	return false;
 }
 
-static void Cmd_Execute(CmdLine_t * line, const char * str)
+static void Cmd_RunRoot(CmdLine_t * line, const char * str)
 {
 	Cmd_Run(line, line->root, str);
 	Cmd_FreeAll(line);
@@ -373,8 +379,6 @@ static void Cmd_Run(CmdLine_t * line, const CmdNode_t * node, const char * str)
 		break;
 	}
 }
-
-
 
 /*
  * INTERRUPT ROUTINES

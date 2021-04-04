@@ -5,9 +5,10 @@
 
 #include "Command.h"
 #include "Modules\I2cCmd.h"
+#include "Modules\SpiCmd.h"
 
 
-CmdNode_t gRootItems[1];
+CmdNode_t gRootItems[2];
 
 const CmdNode_t gRootMenu = {
 	.type = CmdNode_Menu,
@@ -29,6 +30,7 @@ int main(void)
 	GPIO_EnableOutput(LED_RED_GPIO, LED_RED_PIN, GPIO_PIN_RESET);
 
 	I2CCMD_InitMenu(&gRootItems[0]);
+	SPICMD_InitMenu(&gRootItems[1]);
 
 	CmdLine_t line;
 	Cmd_Init(&line, &gRootMenu, USB_Write, (void*)gMemory, sizeof(gMemory));

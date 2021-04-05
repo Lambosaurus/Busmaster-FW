@@ -26,10 +26,17 @@
 
 void COMCMD_PrintRead(CmdLine_t * line, uint8_t * data, uint32_t count)
 {
-	char * bfr = Cmd_Malloc(line, count*2 + 2);
-	NFormat_Hex(bfr, data, count);
-	Cmd_Printf(line, "read: %s\r\n", bfr);
-	Cmd_Free(line, bfr);
+	if (count > 0)
+	{
+		char * bfr = Cmd_Malloc(line, count*2 + 2);
+		NFormat_Hex(bfr, data, count);
+		Cmd_Printf(line, "read: %s\r\n", bfr);
+		Cmd_Free(line, bfr);
+	}
+	else
+	{
+		Cmd_Printf(line, "read: 0 bytes\r\n");
+	}
 }
 
 void COMCMD_PrintOk(CmdLine_t * line)

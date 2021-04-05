@@ -71,7 +71,7 @@ static void I2CCMD_SetPullups(uint32_t r)
  * FUNCTION NODES
  */
 
-const static CmdArg_t gI2cInitArgs[] = {
+static const CmdArg_t gI2cInitArgs[] = {
 	{
 		.name = "speed",
 		.type = CmdArg_Number,
@@ -103,7 +103,7 @@ static void I2CCMD_Init(CmdLine_t * line, CmdArgValue_t * argv)
 	COMCMD_PrintOk(line);
 }
 
-const static CmdNode_t gI2cInitNode = {
+static const CmdNode_t gI2cInitNode = {
 	.type = CmdNode_Function,
 	.name = "init",
 	.func = {
@@ -125,7 +125,7 @@ static void I2CCMD_Deinit(CmdLine_t * line, CmdArgValue_t * argv)
 	COMCMD_PrintOk(line);
 }
 
-const static CmdNode_t gI2cDeinitNode = {
+static const CmdNode_t gI2cDeinitNode = {
 	.type = CmdNode_Function,
 	.name = "deinit",
 	.func = {
@@ -154,7 +154,7 @@ static void I2CCMD_Scan(CmdLine_t * line, CmdArgValue_t * argv)
 	Cmd_Printf(line, "%d devices found.\r\n", found);
 }
 
-const static CmdNode_t gI2cScanNode = {
+static const CmdNode_t gI2cScanNode = {
 	.type = CmdNode_Function,
 	.name = "scan",
 	.func = {
@@ -163,7 +163,7 @@ const static CmdNode_t gI2cScanNode = {
 	}
 };
 
-const static CmdArg_t gI2cWriteArgs[] = {
+static const CmdArg_t gI2cWriteArgs[] = {
 	{
 		.name = "address",
 		.type = CmdArg_Number,
@@ -200,7 +200,7 @@ static void I2CCMD_Write(CmdLine_t * line, CmdArgValue_t * argv)
 	}
 }
 
-const static CmdNode_t gI2cWriteNode = {
+static const CmdNode_t gI2cWriteNode = {
 	.type = CmdNode_Function,
 	.name = "write",
 	.func = {
@@ -210,7 +210,7 @@ const static CmdNode_t gI2cWriteNode = {
 	}
 };
 
-const static CmdArg_t gI2cReadArgs[] = {
+static const CmdArg_t gI2cReadArgs[] = {
 	{
 		.name = "address",
 		.type = CmdArg_Number,
@@ -254,7 +254,7 @@ static void I2CCMD_Read(CmdLine_t * line, CmdArgValue_t * argv)
 	}
 }
 
-const static CmdNode_t gI2cReadNode = {
+static const CmdNode_t gI2cReadNode = {
 	.type = CmdNode_Function,
 	.name = "read",
 	.func = {
@@ -264,7 +264,7 @@ const static CmdNode_t gI2cReadNode = {
 	}
 };
 
-const static CmdArg_t gI2cTransferArgs[] = {
+static const CmdArg_t gI2cTransferArgs[] = {
 	{
 		.name = "address",
 		.type = CmdArg_Number,
@@ -314,7 +314,7 @@ static void I2CCMD_Transfer(CmdLine_t * line, CmdArgValue_t * argv)
 	}
 }
 
-const static CmdNode_t gI2cTransferNode = {
+static const CmdNode_t gI2cTransferNode = {
 	.type = CmdNode_Function,
 	.name = "transfer",
 	.func = {
@@ -324,7 +324,7 @@ const static CmdNode_t gI2cTransferNode = {
 	}
 };
 
-const static CmdNode_t * gI2cFunctions[] = {
+static const CmdNode_t * gI2cFunctions[] = {
 	&gI2cInitNode,
 	&gI2cDeinitNode,
 	&gI2cScanNode,
@@ -333,7 +333,7 @@ const static CmdNode_t * gI2cFunctions[] = {
 	&gI2cTransferNode,
 };
 
-const static CmdNode_t gI2cMenu = {
+static const CmdNode_t gI2cMenu = {
 	.type = CmdNode_Menu,
 	.name = "i2c",
 	.menu = {

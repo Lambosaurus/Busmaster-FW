@@ -6,25 +6,14 @@
 #include "Command.h"
 #include "Modules\I2cCmd.h"
 #include "Modules\SpiCmd.h"
+#include "Modules\UartCmd.h"
+#include "Modules\VersionCmd.h"
 
 
-static void MAIN_PrintVersion(CmdLine_t * line, CmdArgValue_t * args)
-{
-	Cmd_Printf(line, "Busmaster v0.1\r\n");
-}
 
-const static CmdNode_t gVersionNode = {
-	.type = CmdNode_Function,
-	.name = "version",
-	.func = {
-		.arglen = 0,
-		.callback = MAIN_PrintVersion
-	}
-};
+static const CmdNode_t * gRootItems[4];
 
-const static CmdNode_t * gRootItems[3];
-
-const static CmdNode_t gRootMenu = {
+static const CmdNode_t gRootMenu = {
 	.type = CmdNode_Menu,
 	.name = "root",
 	.menu = {
@@ -43,9 +32,10 @@ int main(void)
 	GPIO_EnableOutput(LED_GRN_GPIO, LED_GRN_PIN, GPIO_PIN_RESET);
 	GPIO_EnableOutput(LED_RED_GPIO, LED_RED_PIN, GPIO_PIN_RESET);
 
-	gRootItems[0] = &gVersionNode;
+	gRootItems[0] = VERSIONCMD_InitMenu();
 	gRootItems[1] = I2CCMD_InitMenu();
 	gRootItems[2] = SPICMD_InitMenu();
+	gRootItems[3] = UARTCMD_InitMenu();
 
 	CmdLine_t line;
 	Cmd_Init(&line, &gRootMenu, USB_Write, (void*)gMemory, sizeof(gMemory));

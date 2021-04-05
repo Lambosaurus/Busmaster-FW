@@ -184,7 +184,7 @@ static bool Cmd_ParseToken(const char ** str, CmdToken_t * token)
 			}
 			else
 			{
-				str++;
+				head++;
 			}
 		}
 	}
@@ -240,7 +240,7 @@ static bool Cmd_ParseArg(CmdLine_t * line, const CmdArg_t * arg, CmdArgValue_t *
 		return NParse_Kuint(&str, &value->number) && (*str == 0);
 	case CmdArg_Bytes:
 	{
-		uint32_t maxbytes = token->size;
+		uint32_t maxbytes = token->size + 1;
 		uint8_t * bfr = Cmd_Malloc(line, maxbytes);
 		value->bytes.data = bfr;
 		if (token->delimiter)
@@ -254,7 +254,7 @@ static bool Cmd_ParseArg(CmdLine_t * line, const CmdArg_t * arg, CmdArgValue_t *
 	}
 	case CmdArg_String:
 	{
-		uint32_t maxbytes = token->size;
+		uint32_t maxbytes = token->size + 1; // null char.
 		value->str = Cmd_Malloc(line, maxbytes);
 		return NParse_String(&str, (char *)value->str, maxbytes, &value->bytes.size) && (*str == 0);
 	}

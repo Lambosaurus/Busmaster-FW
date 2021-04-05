@@ -27,7 +27,7 @@ static void SPICMD_CS_Deselect(void);
 
 static bool gSpiEnabled;
 static bool gSpiAutoSelect;
-const static CmdNode_t gSpiMenu;
+static const CmdNode_t gSpiMenu;
 
 /*
  * PUBLIC FUNCTIONS
@@ -66,7 +66,7 @@ static void SPICMD_CS_Deselect(void)
  * FUNCITON NODES
  */
 
-const static CmdArg_t gSpiInitArgs[] = {
+static const CmdArg_t gSpiInitArgs[] = {
 	{
 		.name = "frequency",
 		.type = CmdArg_Number,
@@ -119,7 +119,7 @@ static void SPICMD_Init(CmdLine_t * line, CmdArgValue_t * argv)
 	COMCMD_PrintOk(line);
 }
 
-const static CmdNode_t gSpiInitNode = {
+static const CmdNode_t gSpiInitNode = {
 	.type = CmdNode_Function,
 	.name = "init",
 	.func = {
@@ -140,7 +140,7 @@ static void SPICMD_Deinit(CmdLine_t * line, CmdArgValue_t * argv)
 	COMCMD_PrintOk(line);
 }
 
-const static CmdNode_t gSpiDeinitNode = {
+static const CmdNode_t gSpiDeinitNode = {
 	.type = CmdNode_Function,
 	.name = "deinit",
 	.func = {
@@ -171,7 +171,7 @@ static void SPICMD_Select(CmdLine_t * line, CmdArgValue_t * argv)
 	SPICMD_xSelect(line, true);
 }
 
-const static CmdNode_t gSpiSelectNode = {
+static const CmdNode_t gSpiSelectNode = {
 	.type = CmdNode_Function,
 	.name = "select",
 	.func = {
@@ -185,7 +185,7 @@ static void SPICMD_Deselect(CmdLine_t * line, CmdArgValue_t * argv)
 	SPICMD_xSelect(line, false);
 }
 
-const static CmdNode_t gSpiDeselectNode = {
+static const CmdNode_t gSpiDeselectNode = {
 	.type = CmdNode_Function,
 	.name = "deselect",
 	.func = {
@@ -206,7 +206,7 @@ static void SPICMD_AutoSelect(CmdLine_t * line, CmdArgValue_t * argv)
 	Cmd_Printf(line, "auto select enabled\r\n");
 }
 
-const static CmdNode_t gSpiAutoselectNode = {
+static const CmdNode_t gSpiAutoselectNode = {
 	.type = CmdNode_Function,
 	.name = "autoselect",
 	.func = {
@@ -215,7 +215,7 @@ const static CmdNode_t gSpiAutoselectNode = {
 	}
 };
 
-const static CmdArg_t gSpiWriteArgs[] = {
+static const CmdArg_t gSpiWriteArgs[] = {
 	{
 		.name = "payload",
 		.type = CmdArg_Bytes,
@@ -239,7 +239,7 @@ static void SPICMD_Write(CmdLine_t * line, CmdArgValue_t * argv)
 	COMCMD_PrintWritten(line, data->bytes.size);
 }
 
-const static CmdNode_t gSpiWriteNode = {
+static const CmdNode_t gSpiWriteNode = {
 	.type = CmdNode_Function,
 	.name = "write",
 	.func = {
@@ -249,7 +249,7 @@ const static CmdNode_t gSpiWriteNode = {
 	}
 };
 
-const static CmdArg_t gSpiReadArgs[] = {
+static const CmdArg_t gSpiReadArgs[] = {
 	{
 		.name = "count",
 		.type = CmdArg_Number,
@@ -279,7 +279,7 @@ static void SPICMD_Read(CmdLine_t * line, CmdArgValue_t * argv)
 	COMCMD_PrintRead(line, data, count);
 }
 
-const static CmdNode_t gSpiReadNode = {
+static const CmdNode_t gSpiReadNode = {
 	.type = CmdNode_Function,
 	.name = "read",
 	.func = {
@@ -289,7 +289,7 @@ const static CmdNode_t gSpiReadNode = {
 	}
 };
 
-const static CmdArg_t gSpiTransferArgs[] = {
+static const CmdArg_t gSpiTransferArgs[] = {
 	{
 		.name = "payload",
 		.type = CmdArg_Bytes,
@@ -314,7 +314,7 @@ static void SPICMD_Transfer(CmdLine_t * line, CmdArgValue_t * argv)
 	COMCMD_PrintRead(line, data->bytes.data, data->bytes.size);
 }
 
-const static CmdNode_t gSpiTransferNode = {
+static const CmdNode_t gSpiTransferNode = {
 	.type = CmdNode_Function,
 	.name = "transfer",
 	.func = {
@@ -324,7 +324,7 @@ const static CmdNode_t gSpiTransferNode = {
 	}
 };
 
-const static CmdNode_t * gSpiFunctions[] = {
+static const CmdNode_t * gSpiFunctions[] = {
 		&gSpiInitNode,
 		&gSpiDeinitNode,
 		&gSpiWriteNode,
@@ -335,7 +335,7 @@ const static CmdNode_t * gSpiFunctions[] = {
 		&gSpiDeselectNode,
 };
 
-const static CmdNode_t gSpiMenu = {
+static const CmdNode_t gSpiMenu = {
 	.type = CmdNode_Menu,
 	.name = "spi",
 	.menu = {

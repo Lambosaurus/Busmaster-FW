@@ -176,8 +176,9 @@ bool NParse_Bytes(const char ** str, uint8_t * value, uint32_t size, uint32_t * 
 
 bool NParse_String(const char ** str, char * value, uint32_t size, uint32_t * count)
 {
+	uint32_t written;
 	const char * head = *str;
-	while (size)
+	for (written = 0; written < size - 1; written++)
 	{
 		char ch = *head;
 		if (ch == 0)
@@ -188,10 +189,11 @@ bool NParse_String(const char ** str, char * value, uint32_t size, uint32_t * co
 		{
 			head++;
 			*value++ = ch;
-			size--;
 		}
 	}
+	*value = 0;
 	*str = head;
+	*count = written;
 	return true;
 }
 
@@ -202,6 +204,7 @@ uint32_t NFormat_Hex(char * str, uint8_t * hex, uint32_t count)
 	{
 		str += sprintf(str, "%02X", *hex++);
 	}
+	*str = 0;
 	return str - start;
 }
 

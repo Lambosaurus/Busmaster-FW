@@ -19,13 +19,6 @@
  * PRIVATE PROTOTYPES
  */
 
-static void I2CCMD_Init(CmdLine_t * line, CmdArgValue_t * argv);
-static void I2CCMD_Deinit(CmdLine_t * line, CmdArgValue_t * argv);
-static void I2CCMD_Scan(CmdLine_t * line, CmdArgValue_t * argv);
-static void I2CCMD_Write(CmdLine_t * line, CmdArgValue_t * argv);
-static void I2CCMD_Read(CmdLine_t * line, CmdArgValue_t * argv);
-static void I2CCMD_Transfer(CmdLine_t * line, CmdArgValue_t * argv);
-
 static void I2CCMD_SetPullups(uint32_t r);
 
 /*
@@ -33,6 +26,50 @@ static void I2CCMD_SetPullups(uint32_t r);
  */
 
 static bool gI2cEnabled;
+const static CmdNode_t gI2cMenu;
+
+/*
+ * PUBLIC FUNCTIONS
+ */
+
+const CmdNode_t * I2CCMD_InitMenu(void)
+{
+	MCP425_Init();
+	I2CCMD_SetPullups(0);
+	gI2cEnabled = false;
+	return &gI2cMenu;
+}
+
+/*
+ * PRIVATE FUNCTIONS
+ */
+
+static void I2CCMD_SetPullups(uint32_t r)
+{
+	if (r > 10000)
+	{
+		r = 10000;
+	}
+
+	if (r == 0)
+	{
+		// Disconnect wipers
+		MCP425_SetTerminals(0, MCP425_T_None);
+		MCP425_SetTerminals(1, MCP425_T_None);
+	}
+	else
+	{
+		MCP425_SetResistance(0, r);
+		MCP425_SetResistance(1, r);
+		MCP425_SetTerminals(0, MCP425_T_W | MCP425_T_B);
+		MCP425_SetTerminals(1, MCP425_T_W | MCP425_T_B);
+	}
+}
+
+
+/*
+ * FUNCTION NODES
+ */
 
 const static CmdArg_t gI2cInitArgs[] = {
 	{
@@ -44,118 +81,6 @@ const static CmdArg_t gI2cInitArgs[] = {
 		.type = CmdArg_Number,
 	}
 };
-
-const static CmdArg_t gI2cWriteArgs[] = {
-	{
-		.name = "address",
-		.type = CmdArg_Number,
-	},
-	{
-		.name = "payload",
-		.type = CmdArg_Bytes,
-	}
-};
-
-const static CmdArg_t gI2cReadArgs[] = {
-	{
-		.name = "address",
-		.type = CmdArg_Number,
-	},
-	{
-		.name = "count",
-		.type = CmdArg_Number,
-	}
-};
-
-const static CmdArg_t gI2cTransferArgs[] = {
-	{
-		.name = "address",
-		.type = CmdArg_Number,
-	},
-	{
-		.name = "payload",
-		.type = CmdArg_Bytes,
-	},
-	{
-		.name = "count",
-		.type = CmdArg_Number,
-	}
-};
-
-const static CmdNode_t gI2cFunctions[] = {
-	{
-		.type = CmdNode_Function,
-		.name = "init",
-		.func = {
-			.args = gI2cInitArgs,
-			.arglen = LENGTH(gI2cInitArgs),
-			.callback = I2CCMD_Init,
-		}
-	},
-	{
-		.type = CmdNode_Function,
-		.name = "deinit",
-		.func = {
-			.arglen = 0,
-			.callback = I2CCMD_Deinit,
-		}
-	},
-	{
-		.type = CmdNode_Function,
-		.name = "scan",
-		.func = {
-			.arglen = 0,
-			.callback = I2CCMD_Scan,
-		}
-	},
-	{
-		.type = CmdNode_Function,
-		.name = "write",
-		.func = {
-			.args = gI2cWriteArgs,
-			.arglen = LENGTH(gI2cWriteArgs),
-			.callback = I2CCMD_Write,
-		}
-	},
-	{
-		.type = CmdNode_Function,
-		.name = "read",
-		.func = {
-			.args = gI2cReadArgs,
-			.arglen = LENGTH(gI2cReadArgs),
-			.callback = I2CCMD_Read,
-		}
-	},
-	{
-		.type = CmdNode_Function,
-		.name = "transfer",
-		.func = {
-			.args = gI2cTransferArgs,
-			.arglen = LENGTH(gI2cTransferArgs),
-			.callback = I2CCMD_Transfer,
-		}
-	}
-};
-
-/*
- * PUBLIC FUNCTIONS
- */
-
-void I2CCMD_InitMenu(CmdNode_t * menu)
-{
-	menu->type = CmdNode_Menu;
-	menu->name = "i2c";
-	menu->menu.count = LENGTH(gI2cFunctions);
-	menu->menu.nodes = gI2cFunctions;
-
-	MCP425_Init();
-	I2CCMD_SetPullups(0);
-	gI2cEnabled = false;
-}
-
-/*
- * PRIVATE FUNCTIONS
- */
 
 static void I2CCMD_Init(CmdLine_t * line, CmdArgValue_t * argv)
 {
@@ -178,6 +103,16 @@ static void I2CCMD_Init(CmdLine_t * line, CmdArgValue_t * argv)
 	COMCMD_PrintOk(line);
 }
 
+const static CmdNode_t gI2cInitNode = {
+	.type = CmdNode_Function,
+	.name = "init",
+	.func = {
+		.args = gI2cInitArgs,
+		.arglen = LENGTH(gI2cInitArgs),
+		.callback = I2CCMD_Init,
+	}
+};
+
 static void I2CCMD_Deinit(CmdLine_t * line, CmdArgValue_t * argv)
 {
 	I2CCMD_SetPullups(0);
@@ -189,6 +124,15 @@ static void I2CCMD_Deinit(CmdLine_t * line, CmdArgValue_t * argv)
 	}
 	COMCMD_PrintOk(line);
 }
+
+const static CmdNode_t gI2cDeinitNode = {
+	.type = CmdNode_Function,
+	.name = "deinit",
+	.func = {
+		.arglen = 0,
+		.callback = I2CCMD_Deinit,
+	}
+};
 
 static void I2CCMD_Scan(CmdLine_t * line, CmdArgValue_t * argv)
 {
@@ -209,6 +153,26 @@ static void I2CCMD_Scan(CmdLine_t * line, CmdArgValue_t * argv)
 	}
 	Cmd_Printf(line, "%d devices found.\r\n", found);
 }
+
+const static CmdNode_t gI2cScanNode = {
+	.type = CmdNode_Function,
+	.name = "scan",
+	.func = {
+		.arglen = 0,
+		.callback = I2CCMD_Scan,
+	}
+};
+
+const static CmdArg_t gI2cWriteArgs[] = {
+	{
+		.name = "address",
+		.type = CmdArg_Number,
+	},
+	{
+		.name = "payload",
+		.type = CmdArg_Bytes,
+	}
+};
 
 static void I2CCMD_Write(CmdLine_t * line, CmdArgValue_t * argv)
 {
@@ -235,6 +199,27 @@ static void I2CCMD_Write(CmdLine_t * line, CmdArgValue_t * argv)
 		COMCMD_PrintError(line);
 	}
 }
+
+const static CmdNode_t gI2cWriteNode = {
+	.type = CmdNode_Function,
+	.name = "write",
+	.func = {
+		.args = gI2cWriteArgs,
+		.arglen = LENGTH(gI2cWriteArgs),
+		.callback = I2CCMD_Write,
+	}
+};
+
+const static CmdArg_t gI2cReadArgs[] = {
+	{
+		.name = "address",
+		.type = CmdArg_Number,
+	},
+	{
+		.name = "count",
+		.type = CmdArg_Number,
+	}
+};
 
 static void I2CCMD_Read(CmdLine_t * line, CmdArgValue_t * argv)
 {
@@ -268,6 +253,31 @@ static void I2CCMD_Read(CmdLine_t * line, CmdArgValue_t * argv)
 		COMCMD_PrintError(line);
 	}
 }
+
+const static CmdNode_t gI2cReadNode = {
+	.type = CmdNode_Function,
+	.name = "read",
+	.func = {
+		.args = gI2cReadArgs,
+		.arglen = LENGTH(gI2cReadArgs),
+		.callback = I2CCMD_Read,
+	}
+};
+
+const static CmdArg_t gI2cTransferArgs[] = {
+	{
+		.name = "address",
+		.type = CmdArg_Number,
+	},
+	{
+		.name = "payload",
+		.type = CmdArg_Bytes,
+	},
+	{
+		.name = "count",
+		.type = CmdArg_Number,
+	}
+};
 
 static void I2CCMD_Transfer(CmdLine_t * line, CmdArgValue_t * argv)
 {
@@ -304,27 +314,33 @@ static void I2CCMD_Transfer(CmdLine_t * line, CmdArgValue_t * argv)
 	}
 }
 
-static void I2CCMD_SetPullups(uint32_t r)
-{
-	if (r > 10000)
-	{
-		r = 10000;
+const static CmdNode_t gI2cTransferNode = {
+	.type = CmdNode_Function,
+	.name = "transfer",
+	.func = {
+		.args = gI2cTransferArgs,
+		.arglen = LENGTH(gI2cTransferArgs),
+		.callback = I2CCMD_Transfer,
 	}
+};
 
-	if (r == 0)
-	{
-		// Disconnect wipers
-		MCP425_SetTerminals(0, MCP425_T_None);
-		MCP425_SetTerminals(1, MCP425_T_None);
+const static CmdNode_t * gI2cFunctions[] = {
+	&gI2cInitNode,
+	&gI2cDeinitNode,
+	&gI2cScanNode,
+	&gI2cWriteNode,
+	&gI2cReadNode,
+	&gI2cTransferNode,
+};
+
+const static CmdNode_t gI2cMenu = {
+	.type = CmdNode_Menu,
+	.name = "i2c",
+	.menu = {
+		.count = LENGTH(gI2cFunctions),
+		.nodes = gI2cFunctions
 	}
-	else
-	{
-		MCP425_SetResistance(0, r);
-		MCP425_SetResistance(1, r);
-		MCP425_SetTerminals(0, MCP425_T_W | MCP425_T_B);
-		MCP425_SetTerminals(1, MCP425_T_W | MCP425_T_B);
-	}
-}
+};
 
 /*
  * INTERRUPT ROUTINES

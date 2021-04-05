@@ -20,6 +20,7 @@ typedef struct CmdLine_s CmdLine_t;
 typedef enum {
 	CmdArg_Number,
 	CmdArg_Bytes,
+	CmdArg_String,
 } CmdArgType_t;
 
 typedef enum {
@@ -39,6 +40,7 @@ typedef struct {
 			uint8_t * data;
 		}bytes;
 		uint32_t number;
+		const char * str;
 	};
 } CmdArgValue_t;
 
@@ -47,7 +49,7 @@ typedef struct CmdNode_s {
 	uint8_t type;
 	union {
 		struct {
-			const CmdNode_t * nodes;
+			const CmdNode_t ** nodes;
 			uint32_t count;
 		}menu;
 		struct {

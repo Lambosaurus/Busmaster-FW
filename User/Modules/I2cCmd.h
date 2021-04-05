@@ -16,6 +16,6 @@
  * PUBLIC FUNCTIONS
  */
 
-void I2CCMD_InitMenu(CmdNode_t * menu);
+const CmdNode_t * I2CCMD_InitMenu(void);
 
 #endif //I2CCMD_H

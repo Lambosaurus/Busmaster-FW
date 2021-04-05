@@ -252,6 +252,12 @@ static bool Cmd_ParseArg(CmdLine_t * line, const CmdArg_t * arg, CmdArgValue_t *
 			return NParse_Bytes(&str, bfr, maxbytes, &value->bytes.size) && (*str == 0);
 		}
 	}
+	case CmdArg_String:
+	{
+		uint32_t maxbytes = token->size;
+		value->str = Cmd_Malloc(line, maxbytes);
+		return NParse_String(&str, (char *)value->str, maxbytes, &value->bytes.size) && (*str == 0);
+	}
 	default:
 		return false;
 	}
@@ -265,6 +271,8 @@ static const char * Cmd_ArgTypeStr(const CmdArg_t * arg)
 		return "number";
 	case CmdArg_Bytes:
 		return "bytes";
+	case CmdArg_String:
+		return "string";
 	default:
 		return "UNKNOWN";
 	}
@@ -275,7 +283,7 @@ static void Cmd_PrintMenuHelp(CmdLine_t * line, const CmdNode_t * node)
 	Cmd_Printf(line, "<menu: %s> contains %d nodes:\r\n", node->name, node->menu.count);
 	for (uint32_t i = 0; i < node->menu.count; i++)
 	{
-		const CmdNode_t * child = &node->menu.nodes[i];
+		const CmdNode_t * child = node->menu.nodes[i];
 		Cmd_Printf(line, " - %s\r\n", child->name);
 	}
 }
@@ -303,16 +311,17 @@ static void Cmd_RunMenu(CmdLine_t * line, const CmdNode_t * node, const char * s
 	}
 	else
 	{
-		const CmdNode_t * child = NULL;
+		const CmdNode_t * selected = NULL;
 		for (uint32_t i = 0; i < node->menu.count; i++)
 		{
-			if (strcmp(node->menu.nodes[i].name, token.str) == 0)
+			const CmdNode_t * child = node->menu.nodes[i];
+			if (strcmp(child->name, token.str) == 0)
 			{
-				child = &node->menu.nodes[i];
+				selected = child;
 				break;
 			}
 		}
-		if (child == NULL)
+		if (selected == NULL)
 		{
 			Cmd_Printf(line, "'%s' is not an item within <menu: %s>\r\n", token.str, node->name);
 		}
@@ -320,7 +329,7 @@ static void Cmd_RunMenu(CmdLine_t * line, const CmdNode_t * node, const char * s
 		{
 			// we may as well free this token before we run the next menu.
 			Cmd_Free(line, (void*)token.str);
-			Cmd_Run(line, child, str);
+			Cmd_Run(line, selected, str);
 		}
 	}
 }

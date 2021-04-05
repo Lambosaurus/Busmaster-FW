@@ -8,9 +8,23 @@
 #include "Modules\SpiCmd.h"
 
 
-CmdNode_t gRootItems[2];
+static void MAIN_PrintVersion(CmdLine_t * line, CmdArgValue_t * args)
+{
+	Cmd_Printf(line, "Busmaster v0.1\r\n");
+}
 
-const CmdNode_t gRootMenu = {
+const static CmdNode_t gVersionNode = {
+	.type = CmdNode_Function,
+	.name = "version",
+	.func = {
+		.arglen = 0,
+		.callback = MAIN_PrintVersion
+	}
+};
+
+const static CmdNode_t * gRootItems[3];
+
+const static CmdNode_t gRootMenu = {
 	.type = CmdNode_Menu,
 	.name = "root",
 	.menu = {
@@ -29,8 +43,9 @@ int main(void)
 	GPIO_EnableOutput(LED_GRN_GPIO, LED_GRN_PIN, GPIO_PIN_RESET);
 	GPIO_EnableOutput(LED_RED_GPIO, LED_RED_PIN, GPIO_PIN_RESET);
 
-	I2CCMD_InitMenu(&gRootItems[0]);
-	SPICMD_InitMenu(&gRootItems[1]);
+	gRootItems[0] = &gVersionNode;
+	gRootItems[1] = I2CCMD_InitMenu();
+	gRootItems[2] = SPICMD_InitMenu();
 
 	CmdLine_t line;
 	Cmd_Init(&line, &gRootMenu, USB_Write, (void*)gMemory, sizeof(gMemory));

@@ -16,6 +16,6 @@
  * PUBLIC FUNCTIONS
  */
 
-void SPICMD_InitMenu(CmdNode_t * menu);
+const CmdNode_t * SPICMD_InitMenu(void);
 
 #endif //SPICMD_H

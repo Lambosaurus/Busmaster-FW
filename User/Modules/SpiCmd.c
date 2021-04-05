@@ -18,14 +18,8 @@
  * PRIVATE PROTOTYPES
  */
 
-static void SPICMD_Init(CmdLine_t * line, CmdArgValue_t * argv);
-static void SPICMD_Deinit(CmdLine_t * line, CmdArgValue_t * argv);
-static void SPICMD_Write(CmdLine_t * line, CmdArgValue_t * argv);
-static void SPICMD_Read(CmdLine_t * line, CmdArgValue_t * argv);
-static void SPICMD_Transfer(CmdLine_t * line, CmdArgValue_t * argv);
-static void SPICMD_Select(CmdLine_t * line, CmdArgValue_t * argv);
-static void SPICMD_Deselect(CmdLine_t * line, CmdArgValue_t * argv);
-static void SPICMD_AutoSelect(CmdLine_t * line, CmdArgValue_t * argv);
+static void SPICMD_CS_Select(void);
+static void SPICMD_CS_Deselect(void);
 
 /*
  * PRIVATE VARIABLES
@@ -33,6 +27,44 @@ static void SPICMD_AutoSelect(CmdLine_t * line, CmdArgValue_t * argv);
 
 static bool gSpiEnabled;
 static bool gSpiAutoSelect;
+const static CmdNode_t gSpiMenu;
+
+/*
+ * PUBLIC FUNCTIONS
+ */
+
+const CmdNode_t * SPICMD_InitMenu(void)
+{
+	gSpiEnabled = false;
+	gSpiAutoSelect = true;
+
+	return &gSpiMenu;
+}
+
+/*
+ * PRIVATE FUNCTIONS
+ */
+
+
+static void SPICMD_CS_Select(void)
+{
+	if (gSpiAutoSelect)
+	{
+		GPIO_Reset(SPI_CS_GPIO, SPI_CS_PIN);
+	}
+}
+
+static void SPICMD_CS_Deselect(void)
+{
+	if (gSpiAutoSelect)
+	{
+		GPIO_Set(SPI_CS_GPIO, SPI_CS_PIN);
+	}
+}
+
+/*
+ * FUNCITON NODES
+ */
 
 const static CmdArg_t gSpiInitArgs[] = {
 	{
@@ -44,118 +76,6 @@ const static CmdArg_t gSpiInitArgs[] = {
 		.type = CmdArg_Number,
 	}
 };
-
-const static CmdArg_t gSpiWriteArgs[] = {
-	{
-		.name = "payload",
-		.type = CmdArg_Bytes,
-	}
-};
-
-const static CmdArg_t gSpiReadArgs[] = {
-	{
-		.name = "count",
-		.type = CmdArg_Number,
-	}
-};
-
-const static CmdArg_t gSpiTransferArgs[] = {
-	{
-		.name = "payload",
-		.type = CmdArg_Bytes,
-	}
-};
-
-const static CmdNode_t gSpiFunctions[] = {
-	{
-		.type = CmdNode_Function,
-		.name = "init",
-		.func = {
-			.args = gSpiInitArgs,
-			.arglen = LENGTH(gSpiInitArgs),
-			.callback = SPICMD_Init,
-		}
-	},
-	{
-		.type = CmdNode_Function,
-		.name = "deinit",
-		.func = {
-			.arglen = 0,
-			.callback = SPICMD_Deinit,
-		}
-	},
-	{
-		.type = CmdNode_Function,
-		.name = "select",
-		.func = {
-			.arglen = 0,
-			.callback = SPICMD_Select,
-		}
-	},
-	{
-		.type = CmdNode_Function,
-		.name = "deselect",
-		.func = {
-			.arglen = 0,
-			.callback = SPICMD_Deselect,
-		}
-	},
-	{
-		.type = CmdNode_Function,
-		.name = "autoselect",
-		.func = {
-			.arglen = 0,
-			.callback = SPICMD_AutoSelect,
-		}
-	},
-	{
-		.type = CmdNode_Function,
-		.name = "write",
-		.func = {
-			.args = gSpiWriteArgs,
-			.arglen = LENGTH(gSpiWriteArgs),
-			.callback = SPICMD_Write,
-		}
-	},
-	{
-		.type = CmdNode_Function,
-		.name = "read",
-		.func = {
-			.args = gSpiReadArgs,
-			.arglen = LENGTH(gSpiReadArgs),
-			.callback = SPICMD_Read,
-		}
-	},
-	{
-		.type = CmdNode_Function,
-		.name = "transfer",
-		.func = {
-			.args = gSpiTransferArgs,
-			.arglen = LENGTH(gSpiTransferArgs),
-			.callback = SPICMD_Transfer,
-		}
-	}
-};
-
-
-/*
- * PUBLIC FUNCTIONS
- */
-
-void SPICMD_InitMenu(CmdNode_t * menu)
-{
-	menu->type = CmdNode_Menu;
-	menu->name = "spi";
-	menu->menu.count = LENGTH(gSpiFunctions);
-	menu->menu.nodes = gSpiFunctions;
-
-	gSpiEnabled = false;
-	gSpiAutoSelect = true;
-}
-
-/*
- * PRIVATE FUNCTIONS
- */
 
 static void SPICMD_Init(CmdLine_t * line, CmdArgValue_t * argv)
 {
@@ -199,21 +119,15 @@ static void SPICMD_Init(CmdLine_t * line, CmdArgValue_t * argv)
 	COMCMD_PrintOk(line);
 }
 
-static void SPICMD_CS_Select(void)
-{
-	if (gSpiAutoSelect)
-	{
-		GPIO_Reset(SPI_CS_GPIO, SPI_CS_PIN);
+const static CmdNode_t gSpiInitNode = {
+	.type = CmdNode_Function,
+	.name = "init",
+	.func = {
+		.args = gSpiInitArgs,
+		.arglen = LENGTH(gSpiInitArgs),
+		.callback = SPICMD_Init,
 	}
-}
-
-static void SPICMD_CS_Deselect(void)
-{
-	if (gSpiAutoSelect)
-	{
-		GPIO_Set(SPI_CS_GPIO, SPI_CS_PIN);
-	}
-}
+};
 
 static void SPICMD_Deinit(CmdLine_t * line, CmdArgValue_t * argv)
 {
@@ -225,6 +139,15 @@ static void SPICMD_Deinit(CmdLine_t * line, CmdArgValue_t * argv)
 	}
 	COMCMD_PrintOk(line);
 }
+
+const static CmdNode_t gSpiDeinitNode = {
+	.type = CmdNode_Function,
+	.name = "deinit",
+	.func = {
+		.arglen = 0,
+		.callback = SPICMD_Deinit,
+	}
+};
 
 static void SPICMD_xSelect(CmdLine_t * line, bool enable)
 {
@@ -248,10 +171,28 @@ static void SPICMD_Select(CmdLine_t * line, CmdArgValue_t * argv)
 	SPICMD_xSelect(line, true);
 }
 
+const static CmdNode_t gSpiSelectNode = {
+	.type = CmdNode_Function,
+	.name = "select",
+	.func = {
+		.arglen = 0,
+		.callback = SPICMD_Select,
+	}
+};
+
 static void SPICMD_Deselect(CmdLine_t * line, CmdArgValue_t * argv)
 {
 	SPICMD_xSelect(line, false);
 }
+
+const static CmdNode_t gSpiDeselectNode = {
+	.type = CmdNode_Function,
+	.name = "deselect",
+	.func = {
+		.arglen = 0,
+		.callback = SPICMD_Deselect,
+	}
+};
 
 static void SPICMD_AutoSelect(CmdLine_t * line, CmdArgValue_t * argv)
 {
@@ -264,6 +205,22 @@ static void SPICMD_AutoSelect(CmdLine_t * line, CmdArgValue_t * argv)
 	GPIO_Set(SPI_CS_GPIO, SPI_CS_PIN);
 	Cmd_Printf(line, "auto select enabled\r\n");
 }
+
+const static CmdNode_t gSpiAutoselectNode = {
+	.type = CmdNode_Function,
+	.name = "autoselect",
+	.func = {
+		.arglen = 0,
+		.callback = SPICMD_AutoSelect,
+	}
+};
+
+const static CmdArg_t gSpiWriteArgs[] = {
+	{
+		.name = "payload",
+		.type = CmdArg_Bytes,
+	}
+};
 
 static void SPICMD_Write(CmdLine_t * line, CmdArgValue_t * argv)
 {
@@ -281,6 +238,23 @@ static void SPICMD_Write(CmdLine_t * line, CmdArgValue_t * argv)
 
 	COMCMD_PrintWritten(line, data->bytes.size);
 }
+
+const static CmdNode_t gSpiWriteNode = {
+	.type = CmdNode_Function,
+	.name = "write",
+	.func = {
+		.args = gSpiWriteArgs,
+		.arglen = LENGTH(gSpiWriteArgs),
+		.callback = SPICMD_Write,
+	}
+};
+
+const static CmdArg_t gSpiReadArgs[] = {
+	{
+		.name = "count",
+		.type = CmdArg_Number,
+	}
+};
 
 static void SPICMD_Read(CmdLine_t * line, CmdArgValue_t * argv)
 {
@@ -305,6 +279,23 @@ static void SPICMD_Read(CmdLine_t * line, CmdArgValue_t * argv)
 	COMCMD_PrintRead(line, data, count);
 }
 
+const static CmdNode_t gSpiReadNode = {
+	.type = CmdNode_Function,
+	.name = "read",
+	.func = {
+		.args = gSpiReadArgs,
+		.arglen = LENGTH(gSpiReadArgs),
+		.callback = SPICMD_Read,
+	}
+};
+
+const static CmdArg_t gSpiTransferArgs[] = {
+	{
+		.name = "payload",
+		.type = CmdArg_Bytes,
+	}
+};
+
 static void SPICMD_Transfer(CmdLine_t * line, CmdArgValue_t * argv)
 {
 	if (!gSpiEnabled)
@@ -322,6 +313,37 @@ static void SPICMD_Transfer(CmdLine_t * line, CmdArgValue_t * argv)
 
 	COMCMD_PrintRead(line, data->bytes.data, data->bytes.size);
 }
+
+const static CmdNode_t gSpiTransferNode = {
+	.type = CmdNode_Function,
+	.name = "transfer",
+	.func = {
+		.args = gSpiTransferArgs,
+		.arglen = LENGTH(gSpiTransferArgs),
+		.callback = SPICMD_Transfer,
+	}
+};
+
+const static CmdNode_t * gSpiFunctions[] = {
+		&gSpiInitNode,
+		&gSpiDeinitNode,
+		&gSpiWriteNode,
+		&gSpiReadNode,
+		&gSpiTransferNode,
+		&gSpiAutoselectNode,
+		&gSpiSelectNode,
+		&gSpiDeselectNode,
+};
+
+const static CmdNode_t gSpiMenu = {
+	.type = CmdNode_Menu,
+	.name = "spi",
+	.menu = {
+		.nodes = gSpiFunctions,
+		.count = LENGTH(gSpiFunctions)
+	}
+};
+
 
 /*
  * INTERRUPT ROUTINES

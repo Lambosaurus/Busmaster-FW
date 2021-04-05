@@ -174,6 +174,8 @@ bool NParse_Bytes(const char ** str, uint8_t * value, uint32_t size, uint32_t * 
 	return true;
 }
 
+static const char * gEscCharmap = "abtnvfr";
+
 bool NParse_String(const char ** str, char * value, uint32_t size, uint32_t * count)
 {
 	bool escaped = false;
@@ -195,41 +197,30 @@ bool NParse_String(const char ** str, char * value, uint32_t size, uint32_t * co
 		{
 			if (escaped)
 			{
-				switch (ch)
+				bool esc_found = false;
+				for (uint32_t i = 0; i < sizeof(gEscCharmap); i++)
 				{
-				case 'a':
-					ch = '\a';
-					break;
-				case 'b':
-					ch = '\b';
-					break;
-				case 'e':
-					ch = '\e';
-					break;
-				case 'f':
-					ch = '\f';
-					break;
-				case 'n':
-					ch = '\n';
-					break;
-				case 'r':
-					ch = '\r';
-					break;
-				case 't':
-					ch = '\t';
-					break;
-				case 'v':
-					ch = '\v';
-					break;
-				case 'x':
-					// Intepret the following two chars as a byte literal.
-					if (!NParse_Byte(&head, (uint8_t*)&ch))
+					if (ch == gEscCharmap[i])
 					{
-						return false;
+						ch = '\a' + i;
+						esc_found = true;
+						break;
 					}
-					break;
 				}
-				// Other chars (', ", \, ?) can get their literal interpretation.
+				if (!esc_found)
+				{
+					// We did not match onto the esc table
+					if (ch == 'x')
+					{
+						if (!NParse_Byte(&head, (uint8_t*)&ch))
+						{
+							return false;
+						}
+					}
+					// Otherwise we just interpret it as literal.
+					// Other chars (', ", \, ?) can get their literal interpretation.
+				}
+				escaped = false;
 			}
 			*value++ = ch;
 			written++;
@@ -239,6 +230,43 @@ bool NParse_String(const char ** str, char * value, uint32_t size, uint32_t * co
 	*str = head;
 	*count = written;
 	return true;
+}
+
+uint32_t NFormat_String(char * str, uint32_t size, uint8_t * data, uint32_t count, char delimiter)
+{
+	char * end = str + size;
+	while (count-- && str < end)
+	{
+		char ch = (char)*data++;
+
+		if (ch == delimiter || (ch >= '\a' && ch <= '\r'))
+		{
+			if (end - str <= 2)
+			{
+				break;
+			}
+			*str++ = '\\';
+			if (ch != delimiter)
+			{
+				ch = gEscCharmap[ch - '\a'];
+			}
+			*str++ = ch;
+		}
+		else if (ch >= ' ' && ch <= '~')
+		{
+			*str++ = ch;
+		}
+		else
+		{
+			if (end - str <= 4)
+			{
+				break;
+			}
+			str += sprintf(str, "\\x%02X", ch);
+		}
+	}
+	*str = 0;
+	return str - (end - size);
 }
 
 uint32_t NFormat_Hex(char * str, uint8_t * hex, uint32_t count)

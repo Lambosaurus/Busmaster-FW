@@ -165,27 +165,40 @@ static bool Cmd_ParseToken(const char ** str, CmdToken_t * token)
 		}
 	}
 	char startc = *head;
-	if (startc == '"' || startc == '\'' || startc == '`')
+	if (startc == '"' || startc == '\'' || startc == '[' || startc == '<')
 	{
 		token->delimiter = startc;
+		if (startc == '<' || startc == '[')
+		{
+			// Close braces are always 2 chars after open.
+			startc += 2;
+		}
 		// Check if its a quoted token
 		head++;
 		token->str = head;
+		bool escaped = false;
 		while (1)
 		{
 			char ch = *head;
-			if (ch == startc)
-			{
-				break;
-			}
-			else if (ch == 0)
+
+			if (ch == 0)
 			{
 				return false;
 			}
-			else
+			else if (escaped)
 			{
-				head++;
+				// Do not consider the following character as esc or end
+				escaped = false;
 			}
+			else if (ch == '\\')
+			{
+				escaped = true;
+			}
+			else if (ch == startc)
+			{
+				break;
+			}
+			head++;
 		}
 	}
 	else // Non quoted token
@@ -199,10 +212,7 @@ static bool Cmd_ParseToken(const char ** str, CmdToken_t * token)
 			{
 				break;
 			}
-			else
-			{
-				head++;
-			}
+			head++;
 		}
 	}
 

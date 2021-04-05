@@ -164,7 +164,7 @@ bool NParse_Bytes(const char ** str, uint8_t * value, uint32_t size, uint32_t * 
 			break;
 		}
 		char next = **str;
-		if (next == '-' || next == ':' || next == ',')
+		if (next == '-' || next == ':' || next == ',' || next == ' ')
 		{
 			// Bytes may use these as delimiters.
 			(*str)++;
@@ -176,22 +176,66 @@ bool NParse_Bytes(const char ** str, uint8_t * value, uint32_t size, uint32_t * 
 
 bool NParse_String(const char ** str, char * value, uint32_t size, uint32_t * count)
 {
+	bool escaped = false;
 	uint32_t written;
 	const char * head = *str;
-	for (written = 0; written < size - 1; written++)
+	for (written = 0; written < size - 1;)
 	{
-		char ch = *head;
+		char ch = *head++;
 		if (ch == 0)
 		{
+			head--;
 			break;
+		}
+		else if (ch == '\\')
+		{
+			escaped = true;
 		}
 		else
 		{
-			head++;
+			if (escaped)
+			{
+				switch (ch)
+				{
+				case 'a':
+					ch = '\a';
+					break;
+				case 'b':
+					ch = '\b';
+					break;
+				case 'e':
+					ch = '\e';
+					break;
+				case 'f':
+					ch = '\f';
+					break;
+				case 'n':
+					ch = '\n';
+					break;
+				case 'r':
+					ch = '\r';
+					break;
+				case 't':
+					ch = '\t';
+					break;
+				case 'v':
+					ch = '\v';
+					break;
+				case 'x':
+					// Intepret the following two chars as a byte literal.
+					if (!NParse_Byte(&head, (uint8_t*)&ch))
+					{
+						return false;
+					}
+					break;
+				}
+				// Other chars (', ", \, ?) can get their literal interpretation.
+			}
 			*value++ = ch;
+			written++;
 		}
 	}
-	*value = 0;
+	*value = 0; // Enforce null char.
 	*str = head;
 	*count = written;
 	return true;

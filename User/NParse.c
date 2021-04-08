@@ -174,7 +174,7 @@ bool NParse_Bytes(const char ** str, uint8_t * value, uint32_t size, uint32_t * 
 	return true;
 }
 
-static const char * gEscCharmap = "abtnvfr";
+static const char gEscCharmap[] = "abtnvfr";
 
 bool NParse_String(const char ** str, char * value, uint32_t size, uint32_t * count)
 {
@@ -189,39 +189,41 @@ bool NParse_String(const char ** str, char * value, uint32_t size, uint32_t * co
 			head--;
 			break;
 		}
+		else if (escaped)
+		{
+			bool esc_found = false;
+			for (uint32_t i = 0; i < sizeof(gEscCharmap); i++)
+			{
+				if (ch == gEscCharmap[i])
+				{
+					ch = '\a' + i;
+					esc_found = true;
+					break;
+				}
+			}
+			if (!esc_found)
+			{
+				// We did not match onto the esc table
+				if (ch == 'x')
+				{
+					if (!NParse_Byte(&head, (uint8_t*)&ch))
+					{
+						return false;
+					}
+				}
+				// Otherwise we just interpret it as literal.
+				// Other chars (', ", \, ?) can get their literal interpretation.
+			}
+			escaped = false;
+			*value++ = ch;
+			written++;
+		}
 		else if (ch == '\\')
 		{
 			escaped = true;
 		}
 		else
 		{
-			if (escaped)
-			{
-				bool esc_found = false;
-				for (uint32_t i = 0; i < sizeof(gEscCharmap); i++)
-				{
-					if (ch == gEscCharmap[i])
-					{
-						ch = '\a' + i;
-						esc_found = true;
-						break;
-					}
-				}
-				if (!esc_found)
-				{
-					// We did not match onto the esc table
-					if (ch == 'x')
-					{
-						if (!NParse_Byte(&head, (uint8_t*)&ch))
-						{
-							return false;
-						}
-					}
-					// Otherwise we just interpret it as literal.
-					// Other chars (', ", \, ?) can get their literal interpretation.
-				}
-				escaped = false;
-			}
 			*value++ = ch;
 			written++;
 		}
@@ -239,14 +241,14 @@ uint32_t NFormat_String(char * str, uint32_t size, uint8_t * data, uint32_t coun
 	{
 		char ch = (char)*data++;
 
-		if (ch == delimiter || (ch >= '\a' && ch <= '\r'))
+		if (ch == delimiter || ch == '\\' || (ch >= '\a' && ch <= '\r'))
 		{
 			if (end - str <= 2)
 			{
 				break;
 			}
 			*str++ = '\\';
-			if (ch != delimiter)
+			if (ch != delimiter && ch != '\\')
 			{
 				ch = gEscCharmap[ch - '\a'];
 			}

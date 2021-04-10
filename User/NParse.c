@@ -211,6 +211,10 @@ bool NParse_String(const char ** str, char * value, uint32_t size, uint32_t * co
 						return false;
 					}
 				}
+				else if (ch == '0')
+				{
+					ch = 0;
+				}
 				// Otherwise we just interpret it as literal.
 				// Other chars (', ", \, ?) can get their literal interpretation.
 			}
@@ -241,14 +245,18 @@ uint32_t NFormat_String(char * str, uint32_t size, uint8_t * data, uint32_t coun
 	{
 		char ch = (char)*data++;
 
-		if (ch == delimiter || ch == '\\' || (ch >= '\a' && ch <= '\r'))
+		if (ch == delimiter || ch == '\\' || ch == 0 || (ch >= '\a' && ch <= '\r'))
 		{
 			if (end - str <= 2)
 			{
 				break;
 			}
 			*str++ = '\\';
-			if (ch != delimiter && ch != '\\')
+			if (ch == 0)
+			{
+				ch = 0;
+			}
+			else if (ch != delimiter && ch != '\\')
 			{
 				ch = gEscCharmap[ch - '\a'];
 			}
@@ -271,12 +279,16 @@ uint32_t NFormat_String(char * str, uint32_t size, uint8_t * data, uint32_t coun
 	return str - (end - size);
 }
 
-uint32_t NFormat_Hex(char * str, uint8_t * hex, uint32_t count)
+uint32_t NFormat_Hex(char * str, uint8_t * hex, uint32_t count, char space)
 {
 	char * start = str;
 	while(count--)
 	{
 		str += sprintf(str, "%02X", *hex++);
+		if (space != 0 && count)
+		{
+			*str++ = space;
+		}
 	}
 	*str = 0;
 	return str - start;

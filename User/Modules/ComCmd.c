@@ -3,7 +3,7 @@
 
 #include "NParse.h"
 #include <stdio.h>
-
+#include "ConfigCmd.h"
 
 /*
  * PRIVATE DEFINITIONS
@@ -29,22 +29,41 @@ void COMCMD_PrintRead(CmdLine_t * line, uint8_t * data, uint32_t count)
 {
 	if (count > 0)
 	{
-		//*
-		char * bfr = Cmd_Malloc(line, count*2 + 2);
-		NFormat_Hex(bfr, data, count);
-		Cmd_Printf(line, "read: %s\r\n", bfr);
-		Cmd_Free(line, bfr);
-		/*/
-		char delimiter = '"';
-		uint32_t size = count * 4 + 2;
-		char * bfr = Cmd_Malloc(line, size);
-		uint32_t written = 0;
-		written += snprintf(bfr, size, "read: %c", delimiter);
-		written += NFormat_String(bfr + written, size - written, data, count, delimiter);
-		written += snprintf(bfr + written, size - written, "%c\r\n", delimiter);
-		line->print((uint8_t *)bfr, written);
-		Cmd_Free(line, bfr);
-		//*/
+		char delimiter = gConfig.byte_delimiter;
+
+		if (delimiter == '\'' || delimiter == '\"')
+		{
+			uint32_t size = (count * 4) + 12;
+			char * bfr = Cmd_Malloc(line, size);
+			uint32_t written = 0;
+			written += snprintf(bfr, size, "read: %c", delimiter);
+			written += NFormat_String(bfr + written, size - written, data, count, delimiter);
+			written += snprintf(bfr + written, size - written, "%c\r\n", delimiter);
+			line->print((uint8_t *)bfr, written);
+			Cmd_Free(line, bfr);
+		}
+		else
+		{
+			char space = gConfig.byte_space;
+			uint32_t size = (count * (space ? 3 : 2)) + 12;
+			char * bfr = Cmd_Malloc(line, size);
+			uint32_t written = 0;
+
+			written += snprintf(bfr, size, "read: ");
+			if (delimiter)
+			{
+				bfr[written++] = delimiter;
+			}
+			written += NFormat_Hex(bfr + written, data, count, space);
+			if (delimiter)
+			{
+				// Close braces are always 2 chars after the open.
+				bfr[written++] = delimiter + 2;
+			}
+			written += snprintf(bfr + written, size - written, "\r\n");
+			line->print((uint8_t *)bfr, written);
+			Cmd_Free(line, bfr);
+		}
 	}
 	else
 	{

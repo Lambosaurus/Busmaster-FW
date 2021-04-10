@@ -18,6 +18,7 @@ typedef struct CmdNode_s CmdNode_t;
 typedef struct CmdLine_s CmdLine_t;
 
 typedef enum {
+	CmdArg_Bool,
 	CmdArg_Number,
 	CmdArg_Bytes,
 	CmdArg_String,
@@ -41,6 +42,7 @@ typedef struct {
 		}bytes;
 		uint32_t number;
 		const char * str;
+		bool boolean;
 	};
 } CmdArgValue_t;
 

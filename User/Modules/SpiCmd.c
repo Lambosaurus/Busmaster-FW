@@ -149,8 +149,16 @@ static const CmdNode_t gSpiDeinitNode = {
 	}
 };
 
-static void SPICMD_xSelect(CmdLine_t * line, bool enable)
+static const CmdArg_t gSpiSelectArgs[] = {
+	{
+		.name = "enable",
+		.type = CmdArg_Bool,
+	}
+};
+
+static void SPICMD_Select(CmdLine_t * line, CmdArgValue_t * argv)
 {
+	uint32_t enable = argv[0].boolean;
 	if (!gSpiEnabled)
 	{
 		COMCMD_PrintNoInit(line, "spi");
@@ -166,31 +174,13 @@ static void SPICMD_xSelect(CmdLine_t * line, bool enable)
 	COMCMD_PrintOk(line);
 }
 
-static void SPICMD_Select(CmdLine_t * line, CmdArgValue_t * argv)
-{
-	SPICMD_xSelect(line, true);
-}
-
 static const CmdNode_t gSpiSelectNode = {
 	.type = CmdNode_Function,
 	.name = "select",
 	.func = {
-		.arglen = 0,
+		.arglen = LENGTH(gSpiSelectArgs),
+		.args = gSpiSelectArgs,
 		.callback = SPICMD_Select,
-	}
-};
-
-static void SPICMD_Deselect(CmdLine_t * line, CmdArgValue_t * argv)
-{
-	SPICMD_xSelect(line, false);
-}
-
-static const CmdNode_t gSpiDeselectNode = {
-	.type = CmdNode_Function,
-	.name = "deselect",
-	.func = {
-		.arglen = 0,
-		.callback = SPICMD_Deselect,
 	}
 };
 
@@ -332,7 +322,6 @@ static const CmdNode_t * gSpiFunctions[] = {
 		&gSpiTransferNode,
 		&gSpiAutoselectNode,
 		&gSpiSelectNode,
-		&gSpiDeselectNode,
 };
 
 static const CmdNode_t gSpiMenu = {

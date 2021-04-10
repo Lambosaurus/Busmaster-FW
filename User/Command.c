@@ -246,6 +246,13 @@ static bool Cmd_ParseArg(CmdLine_t * line, const CmdArg_t * arg, CmdArgValue_t *
 	const char * str = token->str;
 	switch (arg->type)
 	{
+	case CmdArg_Bool:
+	{
+		uint32_t n;
+		bool success = NParse_Kuint(&str, &n) && (*str == 0);
+		value->boolean = n;
+		return success;
+	}
 	case CmdArg_Number:
 		return NParse_Kuint(&str, &value->number) && (*str == 0);
 	case CmdArg_Bytes:
@@ -265,8 +272,9 @@ static bool Cmd_ParseArg(CmdLine_t * line, const CmdArg_t * arg, CmdArgValue_t *
 	case CmdArg_String:
 	{
 		uint32_t maxbytes = token->size + 1; // null char.
-		value->str = Cmd_Malloc(line, maxbytes);
-		return NParse_String(&str, (char *)value->str, maxbytes, &value->bytes.size) && (*str == 0);
+		char * bfr = Cmd_Malloc(line, maxbytes);
+		value->str = bfr;
+		return NParse_String(&str, bfr, maxbytes, &maxbytes) && (*str == 0);
 	}
 	default:
 		return false;
@@ -277,6 +285,8 @@ static const char * Cmd_ArgTypeStr(const CmdArg_t * arg)
 {
 	switch (arg->type)
 	{
+	case CmdArg_Bool:
+		return "boolean";
 	case CmdArg_Number:
 		return "number";
 	case CmdArg_Bytes:

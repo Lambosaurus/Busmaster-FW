@@ -325,7 +325,7 @@ static void Cmd_RunMenu(CmdLine_t * line, const CmdNode_t * node, const char * s
 	{
 		Cmd_Printf(line, "<menu: %s>\r\n", node->name);
 	}
-	if (strcmp("?", token.str) == 0)
+	else if (strcmp("?", token.str) == 0)
 	{
 		Cmd_PrintMenuHelp(line, node);
 	}

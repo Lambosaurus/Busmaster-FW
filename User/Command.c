@@ -104,6 +104,12 @@ void Cmd_Parse(CmdLine_t * line, const uint8_t * data, uint32_t count)
 			}
 			line->bfr.index = 0;
 			break;
+		case 127:
+			if (line->bfr.index)
+			{
+				line->bfr.index--;
+			}
+			break;
 		default:
 			if (line->bfr.index < line->bfr.size - 1)
 			{

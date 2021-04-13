@@ -98,7 +98,7 @@ static void I2CCMD_Init(CmdLine_t * line, CmdArgValue_t * argv)
 	uint32_t actual_speed = BUS_I2C->mode;
 	if (actual_speed != speed)
 	{
-		Cmd_Printf(line, "i2c speed truncated to %d\r\n", actual_speed);
+		Cmd_Printf(line, CmdReply_Warn, "i2c speed truncated to %d\r\n", actual_speed);
 	}
 	COMCMD_PrintOk(line);
 }
@@ -148,10 +148,10 @@ static void I2CCMD_Scan(CmdLine_t * line, CmdArgValue_t * argv)
 		if (I2C_Scan(BUS_I2C, i))
 		{
 			found += 1;
-			Cmd_Printf(line, "device found on 0x%02X\r\n", i);
+			Cmd_Printf(line, CmdReply_Info, "device found on 0x%02X\r\n", i);
 		}
 	}
-	Cmd_Printf(line, "%d devices found.\r\n", found);
+	Cmd_Printf(line, CmdReply_Info, "%d devices found.\r\n", found);
 }
 
 static const CmdNode_t gI2cScanNode = {
@@ -186,7 +186,7 @@ static void I2CCMD_Write(CmdLine_t * line, CmdArgValue_t * argv)
 	CmdArgValue_t * txdata = &argv[1];
 	if (address > 0x7F)
 	{
-		Cmd_Printf(line, "I2C address cannot exceed 0x7F\r\n");
+		Cmd_Printf(line, CmdReply_Error, "I2C address cannot exceed 0x7F\r\n");
 		return;
 	}
 
@@ -234,13 +234,13 @@ static void I2CCMD_Read(CmdLine_t * line, CmdArgValue_t * argv)
 
 	if (address > 0x7F)
 	{
-		Cmd_Printf(line, "I2C address cannot exceed 0x7F\r\n");
+		Cmd_Printf(line, CmdReply_Error, "I2C address cannot exceed 0x7F\r\n");
 		return;
 	}
 	if (rxcount > I2C_RX_MAX)
 	{
 		rxcount = I2C_RX_MAX;
-		Cmd_Printf(line, "count truncated to %d\r\n", rxcount);
+		Cmd_Printf(line, CmdReply_Warn, "count truncated to %d\r\n", rxcount);
 	}
 	uint8_t * rxdata = Cmd_Malloc(line, rxcount);
 
@@ -293,13 +293,13 @@ static void I2CCMD_Transfer(CmdLine_t * line, CmdArgValue_t * argv)
 
 	if (address > 0x7F)
 	{
-		Cmd_Printf(line, "I2C address cannot exceed 0x7F\r\n");
+		Cmd_Printf(line, CmdReply_Error, "I2C address cannot exceed 0x7F\r\n");
 		return;
 	}
 	if (rxcount > I2C_RX_MAX)
 	{
 		rxcount = I2C_RX_MAX;
-		Cmd_Printf(line, "count truncated to %d\r\n", rxcount);
+		Cmd_Printf(line, CmdReply_Warn, "count truncated to %d\r\n", rxcount);
 	}
 	uint8_t * rxdata = Cmd_Malloc(line, rxcount);
 

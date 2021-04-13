@@ -103,7 +103,7 @@ static void SPICMD_Init(CmdLine_t * line, CmdArgValue_t * argv)
 		mode = SPI_MODE3;
 		break;
 	default:
-		Cmd_Printf(line, "spi mode must be 0-3\r\n");
+		Cmd_Printf(line, CmdReply_Error, "spi mode must be 0-3\r\n");
 		return;
 	}
 
@@ -114,7 +114,7 @@ static void SPICMD_Init(CmdLine_t * line, CmdArgValue_t * argv)
 	uint32_t actual_bitrate = BUS_SPI->bitrate;
 	if (actual_bitrate != bitrate)
 	{
-		Cmd_Printf(line, "spi frequency truncated to %d\r\n", actual_bitrate);
+		Cmd_Printf(line, CmdReply_Warn, "spi frequency truncated to %d\r\n", actual_bitrate);
 	}
 	COMCMD_PrintOk(line);
 }
@@ -167,7 +167,7 @@ static void SPICMD_Select(CmdLine_t * line, CmdArgValue_t * argv)
 
 	if (gSpiAutoSelect)
 	{
-		Cmd_Printf(line, "auto select disabled\r\n");
+		Cmd_Printf(line, CmdReply_Info, "auto select disabled\r\n");
 		gSpiAutoSelect = false;
 	}
 	GPIO_Write(SPI_CS_GPIO, SPI_CS_PIN, !enable);
@@ -193,7 +193,7 @@ static void SPICMD_AutoSelect(CmdLine_t * line, CmdArgValue_t * argv)
 	}
 	gSpiAutoSelect = true;
 	GPIO_Set(SPI_CS_GPIO, SPI_CS_PIN);
-	Cmd_Printf(line, "auto select enabled\r\n");
+	Cmd_Printf(line, CmdReply_Info, "auto select enabled\r\n");
 }
 
 static const CmdNode_t gSpiAutoselectNode = {
@@ -258,7 +258,7 @@ static void SPICMD_Read(CmdLine_t * line, CmdArgValue_t * argv)
 	if (count > SPI_RX_MAX)
 	{
 		count = SPI_RX_MAX;
-		Cmd_Printf(line, "count truncated to %d\r\n", count);
+		Cmd_Printf(line, CmdReply_Warn, "count truncated to %d\r\n", count);
 	}
 	uint8_t * data = Cmd_Malloc(line, count);
 

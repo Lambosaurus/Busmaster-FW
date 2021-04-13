@@ -29,6 +29,12 @@ typedef enum {
 	CmdNode_Menu,
 } CmdNodeType_t;
 
+typedef enum {
+	CmdReply_Info,
+	CmdReply_Warn,
+	CmdReply_Error,
+} CmdReplyLevel_t;
+
 typedef struct {
 	const char * name;
 	uint8_t type;
@@ -83,7 +89,8 @@ typedef struct CmdLine_s {
 
 void Cmd_Init(CmdLine_t * line, const CmdNode_t * root, void (*print)(const uint8_t * data, uint32_t size), void * memory, uint32_t size);
 void Cmd_Parse(CmdLine_t * line, const uint8_t * data, uint32_t count);
-void Cmd_Printf(CmdLine_t * line, const char * fmt, ...);
+void Cmd_Print(CmdLine_t * line, CmdReplyLevel_t level, const char * data, uint32_t count);
+void Cmd_Printf(CmdLine_t * line, CmdReplyLevel_t level, const char * fmt, ...);
 void * Cmd_Malloc(CmdLine_t * line, uint32_t size);
 void Cmd_Free(CmdLine_t * line, void * ptr);
 

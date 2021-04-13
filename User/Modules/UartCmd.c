@@ -141,7 +141,7 @@ static void UARTCMD_Read(CmdLine_t * line, CmdArgValue_t * argv)
 	if (count > UART_RX_MAX)
 	{
 		count = UART_RX_MAX;
-		Cmd_Printf(line, "count truncated to %d\r\n", count);
+		Cmd_Printf(line, CmdReply_Warn, "count truncated to %d\r\n", count);
 	}
 	uint8_t * data = Cmd_Malloc(line, count);
 	uint32_t read = UART_Read(BUS_UART, data, count);
@@ -167,7 +167,7 @@ static void UARTCMD_Ready(CmdLine_t * line, CmdArgValue_t * argv)
 	}
 
 	uint32_t ready = UART_ReadCount(BUS_UART);
-	Cmd_Printf(line, "%d bytes ready\r\n", ready);
+	Cmd_Printf(line, CmdReply_Info, "%d bytes ready\r\n", ready);
 }
 
 static const CmdNode_t gUartReadyNode = {

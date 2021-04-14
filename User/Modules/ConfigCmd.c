@@ -164,7 +164,7 @@ static const CmdNode_t gConfigFormatNode = {
 	}
 };
 
-static const CmdArg_t gConfigEchoArgs[] = {
+static const CmdArg_t gConfigEnableArgs[] = {
 	{
 		.type = CmdArg_Bool,
 		.name = "enable",
@@ -182,12 +182,45 @@ static const CmdNode_t gConfigEchoNode = {
 	.type = CmdNode_Function,
 	.name = "echo",
 	.func = {
-		.arglen = LENGTH(gConfigEchoArgs),
-		.args = gConfigEchoArgs,
+		.arglen = LENGTH(gConfigEnableArgs),
+		.args = gConfigEnableArgs,
 		.callback = CONFIGCMD_Echo
 	}
 };
 
+static void CONFIGCMD_Color(CmdLine_t * line, CmdArgValue_t * args)
+{
+	bool enable = args[0].boolean;
+	gConfig.color = enable;
+	COMCMD_PrintOk(line);
+}
+
+static const CmdNode_t gConfigColorNode = {
+	.type = CmdNode_Function,
+	.name = "color",
+	.func = {
+		.arglen = LENGTH(gConfigEnableArgs),
+		.args = gConfigEnableArgs,
+		.callback = CONFIGCMD_Color
+	}
+};
+
+static void CONFIGCMD_Bell(CmdLine_t * line, CmdArgValue_t * args)
+{
+	bool enable = args[0].boolean;
+	gConfig.bell = enable;
+	COMCMD_PrintOk(line);
+}
+
+static const CmdNode_t gConfigBellNode = {
+	.type = CmdNode_Function,
+	.name = "bell",
+	.func = {
+		.arglen = LENGTH(gConfigEnableArgs),
+		.args = gConfigEnableArgs,
+		.callback = CONFIGCMD_Bell
+	}
+};
 
 static void CONFIGCMD_Load(CmdLine_t * line, CmdArgValue_t * args)
 {
@@ -240,10 +273,27 @@ static const CmdNode_t gConfigDefaultNode = {
 	}
 };
 
-static const CmdNode_t * gConfigItems[] =
+static const CmdNode_t * gConfigSetItems[] =
 {
 	&gConfigFormatNode,
 	&gConfigEchoNode,
+	&gConfigColorNode,
+	&gConfigBellNode,
+};
+
+static const CmdNode_t gConfigSetMenu =
+{
+	.type = CmdNode_Menu,
+	.name = "set",
+	.menu = {
+		.count = LENGTH(gConfigSetItems),
+		.nodes = gConfigSetItems
+	}
+};
+
+static const CmdNode_t * gConfigItems[] =
+{
+	&gConfigSetMenu,
 	&gConfigLoadNode,
 	&gConfigSaveNode,
 	&gConfigDefaultNode,

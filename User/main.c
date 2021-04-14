@@ -69,6 +69,8 @@ int main(void)
 			}
 
 			MAIN_LedRed();
+			line.cfg.color = gConfig.color;
+			line.cfg.bell = gConfig.bell;
 			Cmd_Parse(&line, bfr, count);
 			MAIN_LedGrn();
 		}

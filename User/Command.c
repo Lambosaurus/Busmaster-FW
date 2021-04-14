@@ -59,6 +59,9 @@ void Cmd_Init(CmdLine_t * line, const CmdNode_t * root, void (*print)(const uint
 	line->mem.heap = memory + CMD_MAX_LINE;
 	line->mem.size = memsize - CMD_MAX_LINE;
 	line->mem.head = line->mem.heap;
+
+	line->cfg.color = false;
+	line->cfg.bell = false;
 }
 
 uint32_t Cmd_Memfree(CmdLine_t * line)
@@ -129,28 +132,34 @@ void Cmd_Parse(CmdLine_t * line, const uint8_t * data, uint32_t count)
 
 void Cmd_Print(CmdLine_t * line, CmdReplyLevel_t level, const char * data, uint32_t count)
 {
-	switch (level)
+	if (line->cfg.color)
 	{
-	case CmdReply_Warn:
-		line->print((uint8_t *)"\x00\x1b[33m", 6);
-		break;
-	case CmdReply_Error:
-		line->print((uint8_t *)"\x00\x1b[31m", 6);
-		break;
-	case CmdReply_Info:
-		break;
+		switch (level)
+		{
+		case CmdReply_Warn:
+			line->print((uint8_t *)"\x00\x1b[33m", 6);
+			break;
+		case CmdReply_Error:
+			line->print((uint8_t *)"\x00\x1b[31m", 6);
+			break;
+		case CmdReply_Info:
+			break;
+		}
 	}
 
 	line->print((uint8_t *)data, count);
 
-	switch (level)
+	if (line->cfg.color)
 	{
-	case CmdReply_Warn:
-	case CmdReply_Error:
-		line->print((uint8_t *)"\x00\x1b[0m", 5);
-		break;
-	case CmdReply_Info:
-		break;
+		switch (level)
+		{
+		case CmdReply_Warn:
+		case CmdReply_Error:
+			line->print((uint8_t *)"\x00\x1b[0m", 5);
+			break;
+		case CmdReply_Info:
+			break;
+		}
 	}
 }
 

@@ -13,6 +13,8 @@ typedef struct {
 	char byte_delimiter;
 	char byte_space;
 	bool echo;
+	bool color;
+	bool bell;
 	uint32_t crc;
 } Config_t;
 

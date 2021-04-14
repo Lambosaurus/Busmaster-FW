@@ -81,6 +81,10 @@ typedef struct CmdLine_s {
 		uint32_t size;
 		void * head;
 	}mem;
+	struct {
+		bool color;
+		bool bell;
+	}cfg;
 } CmdLine_t;
 
 /*

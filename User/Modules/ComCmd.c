@@ -39,7 +39,7 @@ void COMCMD_PrintRead(CmdLine_t * line, uint8_t * data, uint32_t count)
 			written += snprintf(bfr, size, "read: %c", delimiter);
 			written += NFormat_String(bfr + written, size - written, data, count, delimiter);
 			written += snprintf(bfr + written, size - written, "%c\r\n", delimiter);
-			line->print((uint8_t *)bfr, written);
+			Cmd_Print(line, CmdReply_Info, bfr, written);
 			Cmd_Free(line, bfr);
 		}
 		else
@@ -61,34 +61,34 @@ void COMCMD_PrintRead(CmdLine_t * line, uint8_t * data, uint32_t count)
 				bfr[written++] = delimiter + 2;
 			}
 			written += snprintf(bfr + written, size - written, "\r\n");
-			line->print((uint8_t *)bfr, written);
+			Cmd_Print(line, CmdReply_Info, bfr, written);
 			Cmd_Free(line, bfr);
 		}
 	}
 	else
 	{
-		Cmd_Printf(line, "read: 0 bytes\r\n");
+		Cmd_Prints(line, CmdReply_Info, "read: 0 bytes\r\n");
 	}
 }
 
 void COMCMD_PrintOk(CmdLine_t * line)
 {
-	Cmd_Printf(line, "ok\r\n");
+	Cmd_Prints(line, CmdReply_Info, "ok\r\n");
 }
 
 void COMCMD_PrintError(CmdLine_t * line)
 {
-	Cmd_Printf(line, "error\r\n");
+	Cmd_Prints(line, CmdReply_Error, "error\r\n");
 }
 
 void COMCMD_PrintWritten(CmdLine_t * line, uint32_t count)
 {
-	Cmd_Printf(line, "%d bytes written\r\n", count);
+	Cmd_Printf(line, CmdReply_Info, "%d bytes written\r\n", count);
 }
 
 void COMCMD_PrintNoInit(CmdLine_t * line, const char * name)
 {
-	Cmd_Printf(line, "%s not initialised\r\n", name);
+	Cmd_Printf(line, CmdReply_Error, "%s not initialised\r\n", name);
 }
 
 

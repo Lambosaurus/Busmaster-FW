@@ -2,6 +2,7 @@
 #include "Core.h"
 #include "GPIO.h"
 #include "USB.h"
+#include "ADC.h"
 
 #include "Command.h"
 #include "Modules\I2cCmd.h"
@@ -9,10 +10,10 @@
 #include "Modules\UartCmd.h"
 #include "Modules\VersionCmd.h"
 #include "Modules\ConfigCmd.h"
-#include "Modules\VoutCmd.h"
+#include "Modules\AuxCmds.h"
 
 
-static const CmdNode_t * gRootItems[6];
+static const CmdNode_t * gRootItems[8];
 
 static const CmdNode_t gRootMenu = {
 	.type = CmdNode_Menu,
@@ -43,13 +44,16 @@ int main(void)
 	GPIO_EnableOutput(LED_GRN_GPIO, LED_GRN_PIN, GPIO_PIN_RESET);
 	GPIO_EnableOutput(LED_RED_GPIO, LED_RED_PIN, GPIO_PIN_RESET);
 	MAIN_LedRed();
+	ADC_Init();
 
 	gRootItems[0] = VERSIONCMD_InitMenu();
 	gRootItems[1] = CONFIGCMD_InitMenu();
-	gRootItems[2] = VOUTCMD_InitMenu();
+	gRootItems[2] = AUXCMD_InitVout();
 	gRootItems[3] = I2CCMD_InitMenu();
 	gRootItems[4] = SPICMD_InitMenu();
 	gRootItems[5] = UARTCMD_InitMenu();
+	gRootItems[6] = AUXCMD_InitVref();
+	gRootItems[7] = AUXCMD_InitTemp();
 
 	CmdLine_t line;
 	Cmd_Init(&line, &gRootMenu, USB_Write, (void*)gMemory, sizeof(gMemory));
@@ -63,13 +67,14 @@ int main(void)
 		uint32_t count = USB_Read(bfr, sizeof(bfr));
 		if (count)
 		{
-			if (gConfig.echo)
-			{
-				USB_Write(bfr, count);
-			}
-
 			MAIN_LedRed();
+
+			line.cfg.color = gConfig.color;
+			line.cfg.bell = gConfig.bell;
+			line.cfg.echo = gConfig.echo;
+
 			Cmd_Parse(&line, bfr, count);
+
 			MAIN_LedGrn();
 		}
 

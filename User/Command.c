@@ -40,6 +40,8 @@ static void Cmd_RunMenu(CmdLine_t * line, const CmdNode_t * node, const char * s
 static void Cmd_RunFunction(CmdLine_t * line, const CmdNode_t * node, const char * str);
 static void Cmd_Run(CmdLine_t * line, const CmdNode_t * node, const char * str);
 
+static inline void Cmd_Bell(CmdLine_t * line);
+
 /*
  * PRIVATE VARIABLES
  */
@@ -59,6 +61,9 @@ void Cmd_Init(CmdLine_t * line, const CmdNode_t * root, void (*print)(const uint
 	line->mem.heap = memory + CMD_MAX_LINE;
 	line->mem.size = memsize - CMD_MAX_LINE;
 	line->mem.head = line->mem.heap;
+
+	memset(&line->cfg, 0, sizeof(line->cfg));
+	line->last_ch = 0;
 }
 
 uint32_t Cmd_Memfree(CmdLine_t * line)
@@ -70,8 +75,7 @@ void * Cmd_Malloc(CmdLine_t * line, uint32_t size)
 {
 	if (Cmd_Memfree(line) < size)
 	{
-		char * warn = "MEMORY OVERRUN\r\n";
-		line->print((uint8_t *)warn, strlen(warn));
+		Cmd_Prints(line, CmdReply_Error, "MEMORY OVERRUN\r\n");
 	}
 	// Ignore overrun and do it anyway.....
 	void * ptr = line->mem.head;
@@ -89,25 +93,49 @@ void Cmd_Free(CmdLine_t * line, void * ptr)
 
 void Cmd_Parse(CmdLine_t * line, const uint8_t * data, uint32_t count)
 {
-	for (uint32_t i = 0; i < count; i++)
+	const uint8_t * echo_data = data;
+	uint32_t echo_count = count;
+
+	while(count--)
 	{
-		char ch = (char)data[i];
+		char ch = *data++;
 		switch (ch)
 		{
-		case 0:
 		case '\n':
+			if (line->last_ch == '\r')
+			{
+				// completion of a \r\n.
+				break;
+			}
+			// fallthrough
 		case '\r':
-			line->bfr.data[line->bfr.index] = 0;
+		case 0:
+			if (line->cfg.echo)
+			{
+				// Print everything up until now excluding the current char
+				line->print(echo_data, echo_count - count - 1);
+				echo_count = count;
+				echo_data = data;
+				// Now print a full eol.
+				line->print((uint8_t *)"\r\n", 2);
+			}
+
 			if (line->bfr.index)
 			{
+				// null terminate command and run it.
+				line->bfr.data[line->bfr.index] = 0;
 				Cmd_RunRoot(line, line->bfr.data);
+				line->bfr.index = 0;
 			}
-			line->bfr.index = 0;
 			break;
 		case 127:
 			if (line->bfr.index)
 			{
 				line->bfr.index--;
+			}
+			else
+			{
+				Cmd_Bell(line);
 			}
 			break;
 		default:
@@ -123,10 +151,59 @@ void Cmd_Parse(CmdLine_t * line, const uint8_t * data, uint32_t count)
 			}
 			break;
 		}
+		line->last_ch = ch;
+	}
+
+	if (line->cfg.echo)
+	{
+		line->print(echo_data, echo_count);
 	}
 }
 
-void Cmd_Printf(CmdLine_t * line, const char * fmt, ...)
+
+void Cmd_Print(CmdLine_t * line, CmdReplyLevel_t level, const char * data, uint32_t count)
+{
+	if (line->cfg.color)
+	{
+		switch (level)
+		{
+		case CmdReply_Warn:
+			line->print((uint8_t *)"\x00\x1b[33m", 6);
+			break;
+		case CmdReply_Error:
+			line->print((uint8_t *)"\x00\x1b[31m", 6);
+			break;
+		case CmdReply_Info:
+			break;
+		}
+	}
+
+	line->print((uint8_t *)data, count);
+
+	if (line->cfg.color)
+	{
+		switch (level)
+		{
+		case CmdReply_Warn:
+		case CmdReply_Error:
+			line->print((uint8_t *)"\x00\x1b[0m", 5);
+			break;
+		case CmdReply_Info:
+			break;
+		}
+	}
+	if (level == CmdReply_Error)
+	{
+		Cmd_Bell(line);
+	}
+}
+
+void Cmd_Prints(CmdLine_t * line, CmdReplyLevel_t level, const char * str)
+{
+	Cmd_Print(line, level, str, strlen(str));
+}
+
+void Cmd_Printf(CmdLine_t * line, CmdReplyLevel_t level, const char * fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -135,7 +212,7 @@ void Cmd_Printf(CmdLine_t * line, const char * fmt, ...)
     char * bfr = Cmd_Malloc(line, free);
     uint32_t written = vsnprintf(bfr, free, fmt, ap);
     va_end(ap);
-    line->print((uint8_t *)bfr, written);
+    Cmd_Print(line, level, bfr, written);
     Cmd_Free(line, bfr);
 }
 
@@ -143,6 +220,14 @@ void Cmd_Printf(CmdLine_t * line, const char * fmt, ...)
  * PRIVATE FUNCTIONS
  */
 
+static inline void Cmd_Bell(CmdLine_t * line)
+{
+	if (line->cfg.bell)
+	{
+		uint8_t ch = '\a';
+		line->print(&ch, 1);
+	}
+}
 
 static void Cmd_FreeAll(CmdLine_t * line)
 {
@@ -306,21 +391,21 @@ static const char * Cmd_ArgTypeStr(const CmdArg_t * arg)
 
 static void Cmd_PrintMenuHelp(CmdLine_t * line, const CmdNode_t * node)
 {
-	Cmd_Printf(line, "<menu: %s> contains %d nodes:\r\n", node->name, node->menu.count);
+	Cmd_Printf(line, CmdReply_Info, "<menu: %s> contains %d nodes:\r\n", node->name, node->menu.count);
 	for (uint32_t i = 0; i < node->menu.count; i++)
 	{
 		const CmdNode_t * child = node->menu.nodes[i];
-		Cmd_Printf(line, " - %s\r\n", child->name);
+		Cmd_Printf(line, CmdReply_Info, " - %s\r\n", child->name);
 	}
 }
 
 static void Cmd_PrintFunctionHelp(CmdLine_t * line, const CmdNode_t * node)
 {
-	Cmd_Printf(line, "<func: %s> takes %d arguments:\r\n", node->name, node->func.arglen);
+	Cmd_Printf(line, CmdReply_Info, "<func: %s> takes %d arguments:\r\n", node->name, node->func.arglen);
 	for (uint32_t argn = 0; argn < node->func.arglen; argn++)
 	{
 		const CmdArg_t * arg = &node->func.args[argn];
-		Cmd_Printf(line, " - <%s: %s>\r\n", Cmd_ArgTypeStr(arg), arg->name);
+		Cmd_Printf(line, CmdReply_Info, " - <%s: %s>\r\n", Cmd_ArgTypeStr(arg), arg->name);
 	}
 }
 
@@ -329,7 +414,7 @@ static void Cmd_RunMenu(CmdLine_t * line, const CmdNode_t * node, const char * s
 	CmdToken_t token;
 	if (!Cmd_NextToken(line, &str, &token))
 	{
-		Cmd_Printf(line, "<menu: %s>\r\n", node->name);
+		Cmd_Printf(line, CmdReply_Info, "<menu: %s>\r\n", node->name);
 	}
 	else if (strcmp("?", token.str) == 0)
 	{
@@ -349,7 +434,7 @@ static void Cmd_RunMenu(CmdLine_t * line, const CmdNode_t * node, const char * s
 		}
 		if (selected == NULL)
 		{
-			Cmd_Printf(line, "'%s' is not an item within <menu: %s>\r\n", token.str, node->name);
+			Cmd_Printf(line, CmdReply_Error, "'%s' is not an item within <menu: %s>\r\n", token.str, node->name);
 		}
 		else
 		{
@@ -386,7 +471,7 @@ static void Cmd_RunFunction(CmdLine_t * line, const CmdNode_t * node, const char
 
 		if (!(token_ok && Cmd_ParseArg(line, arg, args + argn, &token)))
 		{
-			Cmd_Printf(line, "Argument %d is <%s: %s>\r\n", argn+1, Cmd_ArgTypeStr(arg), arg->name);
+			Cmd_Printf(line, CmdReply_Error, "Argument %d is <%s: %s>\r\n", argn+1, Cmd_ArgTypeStr(arg), arg->name);
 			return;
 		}
 
@@ -394,7 +479,7 @@ static void Cmd_RunFunction(CmdLine_t * line, const CmdNode_t * node, const char
 	}
 	if (argn != node->func.arglen)
 	{
-		Cmd_Printf(line, "<func: %s> required %d arguments\r\n", node->name, node->func.arglen);
+		Cmd_Printf(line, CmdReply_Error, "<func: %s> required %d arguments\r\n", node->name, node->func.arglen);
 	}
 	else
 	{

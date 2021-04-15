@@ -186,7 +186,7 @@ static void I2CCMD_Write(CmdLine_t * line, CmdArgValue_t * argv)
 	CmdArgValue_t * txdata = &argv[1];
 	if (address > 0x7F)
 	{
-		Cmd_Printf(line, CmdReply_Error, "I2C address cannot exceed 0x7F\r\n");
+		Cmd_Prints(line, CmdReply_Error, "I2C address cannot exceed 0x7F\r\n");
 		return;
 	}
 
@@ -234,7 +234,7 @@ static void I2CCMD_Read(CmdLine_t * line, CmdArgValue_t * argv)
 
 	if (address > 0x7F)
 	{
-		Cmd_Printf(line, CmdReply_Error, "I2C address cannot exceed 0x7F\r\n");
+		Cmd_Prints(line, CmdReply_Error, "I2C address cannot exceed 0x7F\r\n");
 		return;
 	}
 	if (rxcount > I2C_RX_MAX)
@@ -293,7 +293,7 @@ static void I2CCMD_Transfer(CmdLine_t * line, CmdArgValue_t * argv)
 
 	if (address > 0x7F)
 	{
-		Cmd_Printf(line, CmdReply_Error, "I2C address cannot exceed 0x7F\r\n");
+		Cmd_Prints(line, CmdReply_Error, "I2C address cannot exceed 0x7F\r\n");
 		return;
 	}
 	if (rxcount > I2C_RX_MAX)

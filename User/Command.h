@@ -95,6 +95,7 @@ void Cmd_Init(CmdLine_t * line, const CmdNode_t * root, void (*print)(const uint
 void Cmd_Parse(CmdLine_t * line, const uint8_t * data, uint32_t count);
 void Cmd_Print(CmdLine_t * line, CmdReplyLevel_t level, const char * data, uint32_t count);
 void Cmd_Printf(CmdLine_t * line, CmdReplyLevel_t level, const char * fmt, ...);
+void Cmd_Prints(CmdLine_t * line, CmdReplyLevel_t level, const char * str);
 void * Cmd_Malloc(CmdLine_t * line, uint32_t size);
 void Cmd_Free(CmdLine_t * line, void * ptr);
 

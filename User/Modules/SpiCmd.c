@@ -103,7 +103,7 @@ static void SPICMD_Init(CmdLine_t * line, CmdArgValue_t * argv)
 		mode = SPI_MODE3;
 		break;
 	default:
-		Cmd_Printf(line, CmdReply_Error, "spi mode must be 0-3\r\n");
+		Cmd_Prints(line, CmdReply_Error, "spi mode must be 0-3\r\n");
 		return;
 	}
 
@@ -167,7 +167,7 @@ static void SPICMD_Select(CmdLine_t * line, CmdArgValue_t * argv)
 
 	if (gSpiAutoSelect)
 	{
-		Cmd_Printf(line, CmdReply_Info, "auto select disabled\r\n");
+		Cmd_Prints(line, CmdReply_Info, "auto select disabled\r\n");
 		gSpiAutoSelect = false;
 	}
 	GPIO_Write(SPI_CS_GPIO, SPI_CS_PIN, !enable);
@@ -193,7 +193,7 @@ static void SPICMD_AutoSelect(CmdLine_t * line, CmdArgValue_t * argv)
 	}
 	gSpiAutoSelect = true;
 	GPIO_Set(SPI_CS_GPIO, SPI_CS_PIN);
-	Cmd_Printf(line, CmdReply_Info, "auto select enabled\r\n");
+	Cmd_Prints(line, CmdReply_Info, "auto select enabled\r\n");
 }
 
 static const CmdNode_t gSpiAutoselectNode = {

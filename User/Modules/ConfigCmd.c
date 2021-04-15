@@ -149,8 +149,8 @@ static void CONFIGCMD_Format(CmdLine_t * line, CmdArgValue_t * args)
 	}
 	else
 	{
-		Cmd_Printf(line, CmdReply_Warn, "Format specifiers is a bit goofy. Ask tim for now.\r\n");
-		Cmd_Printf(line, CmdReply_Error, "Note: \"'s or ['s will be needed to permit argument parsing.\r\n");
+		Cmd_Prints(line, CmdReply_Warn, "Format specifiers is a bit goofy. Ask tim for now.\r\n");
+		Cmd_Prints(line, CmdReply_Error, "Note: \"'s or ['s will be needed to permit argument parsing.\r\n");
 	}
 }
 

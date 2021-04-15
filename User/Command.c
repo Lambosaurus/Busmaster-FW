@@ -40,6 +40,8 @@ static void Cmd_RunMenu(CmdLine_t * line, const CmdNode_t * node, const char * s
 static void Cmd_RunFunction(CmdLine_t * line, const CmdNode_t * node, const char * str);
 static void Cmd_Run(CmdLine_t * line, const CmdNode_t * node, const char * str);
 
+static inline void Cmd_Bell(CmdLine_t * line);
+
 /*
  * PRIVATE VARIABLES
  */
@@ -73,8 +75,7 @@ void * Cmd_Malloc(CmdLine_t * line, uint32_t size)
 {
 	if (Cmd_Memfree(line) < size)
 	{
-		char * warn = "MEMORY OVERRUN\r\n";
-		line->print((uint8_t *)warn, strlen(warn));
+		Cmd_Prints(line, CmdReply_Error, "MEMORY OVERRUN\r\n");
 	}
 	// Ignore overrun and do it anyway.....
 	void * ptr = line->mem.head;
@@ -111,6 +112,10 @@ void Cmd_Parse(CmdLine_t * line, const uint8_t * data, uint32_t count)
 			if (line->bfr.index)
 			{
 				line->bfr.index--;
+			}
+			else
+			{
+				Cmd_Bell(line);
 			}
 			break;
 		default:
@@ -161,6 +166,15 @@ void Cmd_Print(CmdLine_t * line, CmdReplyLevel_t level, const char * data, uint3
 			break;
 		}
 	}
+	if (level == CmdReply_Error)
+	{
+		Cmd_Bell(line);
+	}
+}
+
+void Cmd_Prints(CmdLine_t * line, CmdReplyLevel_t level, const char * str)
+{
+	Cmd_Print(line, level, str, strlen(str));
 }
 
 void Cmd_Printf(CmdLine_t * line, CmdReplyLevel_t level, const char * fmt, ...)
@@ -180,6 +194,14 @@ void Cmd_Printf(CmdLine_t * line, CmdReplyLevel_t level, const char * fmt, ...)
  * PRIVATE FUNCTIONS
  */
 
+static inline void Cmd_Bell(CmdLine_t * line)
+{
+	if (line->cfg.bell)
+	{
+		uint8_t ch = '\a';
+		line->print(&ch, 1);
+	}
+}
 
 static void Cmd_FreeAll(CmdLine_t * line)
 {

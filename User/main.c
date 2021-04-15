@@ -63,15 +63,14 @@ int main(void)
 		uint32_t count = USB_Read(bfr, sizeof(bfr));
 		if (count)
 		{
-			if (gConfig.echo)
-			{
-				USB_Write(bfr, count);
-			}
-
 			MAIN_LedRed();
+
 			line.cfg.color = gConfig.color;
 			line.cfg.bell = gConfig.bell;
+			line.cfg.echo = gConfig.echo;
+
 			Cmd_Parse(&line, bfr, count);
+
 			MAIN_LedGrn();
 		}
 

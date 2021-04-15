@@ -84,7 +84,9 @@ typedef struct CmdLine_s {
 	struct {
 		bool color;
 		bool bell;
+		bool echo;
 	}cfg;
+	char last_ch;
 } CmdLine_t;
 
 /*

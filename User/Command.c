@@ -62,8 +62,8 @@ void Cmd_Init(CmdLine_t * line, const CmdNode_t * root, void (*print)(const uint
 	line->mem.size = memsize - CMD_MAX_LINE;
 	line->mem.head = line->mem.heap;
 
-	line->cfg.color = false;
-	line->cfg.bell = false;
+	memset(&line->cfg, 0, sizeof(line->cfg));
+	line->last_ch = 0;
 }
 
 uint32_t Cmd_Memfree(CmdLine_t * line)
@@ -93,20 +93,40 @@ void Cmd_Free(CmdLine_t * line, void * ptr)
 
 void Cmd_Parse(CmdLine_t * line, const uint8_t * data, uint32_t count)
 {
-	for (uint32_t i = 0; i < count; i++)
+	const uint8_t * echo_data = data;
+	uint32_t echo_count = count;
+
+	while(count--)
 	{
-		char ch = (char)data[i];
+		char ch = *data++;
 		switch (ch)
 		{
-		case 0:
 		case '\n':
+			if (line->last_ch == '\r')
+			{
+				// completion of a \r\n.
+				break;
+			}
+			// fallthrough
 		case '\r':
-			line->bfr.data[line->bfr.index] = 0;
+		case 0:
+			if (line->cfg.echo)
+			{
+				// Print everything up until now excluding the current char
+				line->print(echo_data, echo_count - count - 1);
+				echo_count = count;
+				echo_data = data;
+				// Now print a full eol.
+				line->print((uint8_t *)"\r\n", 2);
+			}
+
 			if (line->bfr.index)
 			{
+				// null terminate command and run it.
+				line->bfr.data[line->bfr.index] = 0;
 				Cmd_RunRoot(line, line->bfr.data);
+				line->bfr.index = 0;
 			}
-			line->bfr.index = 0;
 			break;
 		case 127:
 			if (line->bfr.index)
@@ -131,6 +151,12 @@ void Cmd_Parse(CmdLine_t * line, const uint8_t * data, uint32_t count)
 			}
 			break;
 		}
+		line->last_ch = ch;
+	}
+
+	if (line->cfg.echo)
+	{
+		line->print(echo_data, echo_count);
 	}
 }
 

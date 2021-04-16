@@ -39,8 +39,10 @@ static void Cmd_PrintFunctionHelp(CmdLine_t * line, const CmdNode_t * node);
 static void Cmd_RunMenu(CmdLine_t * line, const CmdNode_t * node, const char * str);
 static void Cmd_RunFunction(CmdLine_t * line, const CmdNode_t * node, const char * str);
 static void Cmd_Run(CmdLine_t * line, const CmdNode_t * node, const char * str);
+static void Cmd_Bell(CmdLine_t * line);
 
-static inline void Cmd_Bell(CmdLine_t * line);
+static const char * Cmd_TabComplete(CmdLine_t * line, const char * str);
+static const char * Cmd_TabCompleteMenu(CmdLine_t * line, const CmdNode_t * node, const char * str);
 
 /*
  * PRIVATE VARIABLES
@@ -128,7 +130,35 @@ void Cmd_Parse(CmdLine_t * line, const uint8_t * data, uint32_t count)
 				line->bfr.index = 0;
 			}
 			break;
-		case 127:
+		case '\t':
+			line->bfr.data[line->bfr.index] = 0;
+			const char * append = Cmd_TabComplete(line, line->bfr.data);
+			if (append != NULL)
+			{
+				uint32_t append_count = strlen(append);
+				uint32_t newindex = line->bfr.index + append_count;
+				if (newindex < line->bfr.size)
+				{
+					// A tab complete should not overflow the line buffer.
+					memcpy(line->bfr.data + line->bfr.index, append, append_count);
+					line->bfr.index += append_count;
+					line->print((uint8_t *)append, append_count);
+				}
+			}
+			else
+			{
+				Cmd_Bell(line);
+			}
+			if (line->cfg.echo)
+			{
+				// Print everything up until now excluding the current char
+				// This is needed to swallow the \t char.
+				line->print(echo_data, echo_count - count - 1);
+				echo_count = count;
+				echo_data = data;
+			}
+			break;
+		case 127: // DEL char
 			if (line->bfr.index)
 			{
 				line->bfr.index--;
@@ -220,7 +250,7 @@ void Cmd_Printf(CmdLine_t * line, CmdReplyLevel_t level, const char * fmt, ...)
  * PRIVATE FUNCTIONS
  */
 
-static inline void Cmd_Bell(CmdLine_t * line)
+static void Cmd_Bell(CmdLine_t * line)
 {
 	if (line->cfg.bell)
 	{
@@ -330,6 +360,13 @@ static void Cmd_RunRoot(CmdLine_t * line, const char * str)
 {
 	Cmd_Run(line, line->root, str);
 	Cmd_FreeAll(line);
+}
+
+static const char * Cmd_TabComplete(CmdLine_t * line, const char * str)
+{
+	const char * append = Cmd_TabCompleteMenu(line, line->root, str);
+	Cmd_FreeAll(line);
+	return append;
 }
 
 static bool Cmd_ParseArg(CmdLine_t * line, const CmdArg_t * arg, CmdArgValue_t * value, CmdToken_t * token)
@@ -499,6 +536,56 @@ static void Cmd_Run(CmdLine_t * line, const CmdNode_t * node, const char * str)
 		break;
 	}
 }
+
+static const char * Cmd_TabCompleteMenu(CmdLine_t * line, const CmdNode_t * node, const char * str)
+{
+	CmdToken_t token;
+	if (Cmd_NextToken(line, &str, &token))
+	{
+		bool end = *str == 0;
+
+		if (end)
+		{
+			const CmdNode_t * candidate = NULL;
+			for (uint32_t i = 0; i < node->menu.count; i++)
+			{
+				const CmdNode_t * child = node->menu.nodes[i];
+				// Check if the token matches so far
+				if (strncmp(child->name, token.str, token.size) == 0)
+				{
+					if (candidate != NULL)
+					{
+						// There are more than one candidates. No decision can be made.
+						return NULL;
+					}
+					candidate = child;
+				}
+			}
+			if (candidate != NULL)
+			{
+				return candidate->name + token.size;
+			}
+		}
+		else
+		{
+			for (uint32_t i = 0; i < node->menu.count; i++)
+			{
+				const CmdNode_t * child = node->menu.nodes[i];
+				if (strcmp(child->name, token.str) == 0)
+				{
+					if (child->type == CmdNode_Menu)
+					{
+						return Cmd_TabCompleteMenu(line, child, str);
+					}
+					return NULL;
+				}
+			}
+		}
+		return NULL;
+	}
+	return NULL;
+}
+
 
 /*
  * INTERRUPT ROUTINES

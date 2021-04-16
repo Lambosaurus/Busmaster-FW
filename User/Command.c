@@ -264,7 +264,6 @@ static void Cmd_FreeAll(CmdLine_t * line)
 	line->mem.head = line->mem.heap;
 }
 
-
 static bool Cmd_ParseToken(const char ** str, CmdToken_t * token)
 {
 	const char * head = *str;
@@ -388,7 +387,8 @@ static bool Cmd_ParseArg(CmdLine_t * line, const CmdArg_t * arg, CmdArgValue_t *
 		uint32_t maxbytes = token->size + 1;
 		uint8_t * bfr = Cmd_Malloc(line, maxbytes);
 		value->bytes.data = bfr;
-		if (token->delimiter)
+		char delim = token->delimiter;
+		if (delim == '"' || delim == '\'')
 		{
 			return NParse_String(&str, (char *)bfr, maxbytes, &value->bytes.size) && (*str == 0);
 		}

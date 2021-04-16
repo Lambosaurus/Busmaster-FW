@@ -184,7 +184,7 @@ void Cmd_Parse(CmdLine_t * line, const uint8_t * data, uint32_t count)
 		line->last_ch = ch;
 	}
 
-	if (line->cfg.echo)
+	if (line->cfg.echo && echo_count)
 	{
 		line->print(echo_data, echo_count);
 	}

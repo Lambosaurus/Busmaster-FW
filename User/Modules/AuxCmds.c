@@ -1,6 +1,7 @@
 
 #include "AuxCmds.h"
 #include "ComCmd.h"
+#include "ConfigCmd.h"
 
 #include "ADC.h"
 #include "GPIO.h"
@@ -36,7 +37,7 @@ const CmdNode_t * AUXCMD_InitVref(void)
 
 const CmdNode_t * AUXCMD_InitVout(void)
 {
-	GPIO_EnableOutput(VOUT_EN_GPIO, VOUT_EN_PIN, GPIO_PIN_SET);
+	GPIO_EnableOutput(VOUT_EN_GPIO, VOUT_EN_PIN, !gConfig.default_vout);
 	return &gVoutNode;
 }
 

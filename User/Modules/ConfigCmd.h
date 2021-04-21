@@ -15,6 +15,7 @@ typedef struct {
 	bool echo;
 	bool color;
 	bool bell;
+	bool default_vout;
 	uint32_t crc;
 } Config_t;
 

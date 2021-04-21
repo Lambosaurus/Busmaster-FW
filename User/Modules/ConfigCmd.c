@@ -70,6 +70,9 @@ static void Config_Default(void)
 		.byte_delimiter = '[',
 		.byte_space = ' ',
 		.echo = true,
+		.bell = true,
+		.color = true,
+		.default_vout = false,
 	};
 	memcpy(&gConfig, &config, sizeof(config));
 }
@@ -222,6 +225,23 @@ static const CmdNode_t gConfigBellNode = {
 	}
 };
 
+static void CONFIGCMD_DefaultVout(CmdLine_t * line, CmdArgValue_t * args)
+{
+	bool enable = args[0].boolean;
+	gConfig.default_vout = enable;
+	COMCMD_PrintOk(line);
+}
+
+static const CmdNode_t gConfigDefaultVoutNode = {
+	.type = CmdNode_Function,
+	.name = "boot-vout",
+	.func = {
+		.arglen = LENGTH(gConfigEnableArgs),
+		.args = gConfigEnableArgs,
+		.callback = CONFIGCMD_DefaultVout
+	}
+};
+
 static void CONFIGCMD_Load(CmdLine_t * line, CmdArgValue_t * args)
 {
 	if (Config_Load())
@@ -279,6 +299,7 @@ static const CmdNode_t * gConfigSetItems[] =
 	&gConfigEchoNode,
 	&gConfigColorNode,
 	&gConfigBellNode,
+	&gConfigDefaultVoutNode,
 };
 
 static const CmdNode_t gConfigSetMenu =

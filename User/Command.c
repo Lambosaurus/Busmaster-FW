@@ -72,6 +72,7 @@ void Cmd_Init(CmdLine_t * line, const CmdNode_t * root, void (*print)(const uint
 
 	memset(&line->cfg, 0, sizeof(line->cfg));
 	line->last_ch = 0;
+	line->ansi = CmdAnsi_None;
 }
 
 uint32_t Cmd_Memfree(CmdLine_t * line)
@@ -99,6 +100,41 @@ void Cmd_Free(CmdLine_t * line, void * ptr)
 	}
 }
 
+
+void Cmd_HandleAnsi(CmdLine_t * line, char ch)
+{
+	switch (line->ansi)
+	{
+	case CmdAnsi_Escaped:
+		if (ch == '[')
+		{
+			line->ansi = CmdAnsi_CSI;
+		}
+		else
+		{
+			line->ansi = CmdAnsi_None;
+		}
+		break;
+	case CmdAnsi_CSI:
+		if (ch > 0x40)
+		{
+			switch (ch)
+			{
+			case 'A': // up
+			case 'B': // down
+			case 'C': // fwd
+			case 'D': // back
+			default:
+				Cmd_Bell(line);
+				break;
+			}
+			line->ansi = CmdAnsi_None;
+		}
+	case CmdAnsi_None:
+		break;
+	}
+}
+
 void Cmd_Parse(CmdLine_t * line, const uint8_t * data, uint32_t count)
 {
 	const uint8_t * echo_data = data;
@@ -107,87 +143,108 @@ void Cmd_Parse(CmdLine_t * line, const uint8_t * data, uint32_t count)
 	while(count--)
 	{
 		char ch = *data++;
-		switch (ch)
+
+		if (line->ansi != CmdAnsi_None)
 		{
-		case '\n':
-			if (line->last_ch == '\r')
+			Cmd_HandleAnsi(line, ch);
+			// Do not echo ansi sequences
+			echo_count = count;
+			echo_data = data;
+		}
+		else
+		{
+			switch (ch)
 			{
-				// completion of a \r\n.
+			case '\n':
+				if (line->last_ch == '\r')
+				{
+					// completion of a \r\n.
+					break;
+				}
+				// fallthrough
+			case '\r':
+			case 0:
+				if (line->cfg.echo)
+				{
+					// Print everything up until now excluding the current char
+					line->print(echo_data, echo_count - count - 1);
+					echo_count = count;
+					echo_data = data;
+					// Now print a full eol.
+					line->print((uint8_t *)"\r\n", 2);
+				}
+
+				if (line->bfr.index)
+				{
+					// null terminate command and run it.
+					line->bfr.data[line->bfr.index] = 0;
+					Cmd_RunRoot(line, line->bfr.data);
+					line->bfr.index = 0;
+				}
+				break;
+			case '\t':
+				line->bfr.data[line->bfr.index] = 0;
+				const char * append = Cmd_TabComplete(line, line->bfr.data);
+				if (append != NULL)
+				{
+					uint32_t append_count = strlen(append);
+					uint32_t newindex = line->bfr.index + append_count;
+					if (newindex < line->bfr.size)
+					{
+						// A tab complete should not overflow the line buffer.
+						memcpy(line->bfr.data + line->bfr.index, append, append_count);
+						line->bfr.index += append_count;
+						line->print((uint8_t *)append, append_count);
+					}
+				}
+				else
+				{
+					Cmd_Bell(line);
+				}
+				if (line->cfg.echo)
+				{
+					// Print everything up until now excluding the current char
+					// This is needed to swallow the \t char.
+					line->print(echo_data, echo_count - count - 1);
+					echo_count = count;
+					echo_data = data;
+				}
+				break;
+			case 127: // DEL char
+				if (line->bfr.index)
+				{
+					line->bfr.index--;
+				}
+				else
+				{
+					Cmd_Bell(line);
+				}
+				break;
+			case '\e':
+				if (line->cfg.echo)
+				{
+					// Swallow this char.
+					line->print(echo_data, echo_count - count - 1);
+					echo_count = count;
+					echo_data = data;
+				}
+				line->ansi = CmdAnsi_Escaped;
+				break;
+			default:
+				if (line->bfr.index < line->bfr.size - 1)
+				{
+					// Need to leave room for at least a null char.
+					line->bfr.data[line->bfr.index++] = ch;
+				}
+				else
+				{
+					// Discard the line
+					line->bfr.index = 0;
+				}
 				break;
 			}
-			// fallthrough
-		case '\r':
-		case 0:
-			if (line->cfg.echo)
-			{
-				// Print everything up until now excluding the current char
-				line->print(echo_data, echo_count - count - 1);
-				echo_count = count;
-				echo_data = data;
-				// Now print a full eol.
-				line->print((uint8_t *)"\r\n", 2);
-			}
-
-			if (line->bfr.index)
-			{
-				// null terminate command and run it.
-				line->bfr.data[line->bfr.index] = 0;
-				Cmd_RunRoot(line, line->bfr.data);
-				line->bfr.index = 0;
-			}
-			break;
-		case '\t':
-			line->bfr.data[line->bfr.index] = 0;
-			const char * append = Cmd_TabComplete(line, line->bfr.data);
-			if (append != NULL)
-			{
-				uint32_t append_count = strlen(append);
-				uint32_t newindex = line->bfr.index + append_count;
-				if (newindex < line->bfr.size)
-				{
-					// A tab complete should not overflow the line buffer.
-					memcpy(line->bfr.data + line->bfr.index, append, append_count);
-					line->bfr.index += append_count;
-					line->print((uint8_t *)append, append_count);
-				}
-			}
-			else
-			{
-				Cmd_Bell(line);
-			}
-			if (line->cfg.echo)
-			{
-				// Print everything up until now excluding the current char
-				// This is needed to swallow the \t char.
-				line->print(echo_data, echo_count - count - 1);
-				echo_count = count;
-				echo_data = data;
-			}
-			break;
-		case 127: // DEL char
-			if (line->bfr.index)
-			{
-				line->bfr.index--;
-			}
-			else
-			{
-				Cmd_Bell(line);
-			}
-			break;
-		default:
-			if (line->bfr.index < line->bfr.size - 1)
-			{
-				// Need to leave room for at least a null char.
-				line->bfr.data[line->bfr.index++] = ch;
-			}
-			else
-			{
-				// Discard the line
-				line->bfr.index = 0;
-			}
-			break;
+			line->last_ch = ch;
 		}
-		line->last_ch = ch;
 	}
 
 	if (line->cfg.echo && echo_count)

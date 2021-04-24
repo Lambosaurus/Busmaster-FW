@@ -43,6 +43,12 @@ typedef struct {
 	uint8_t type;
 } CmdArg_t;
 
+typedef enum {
+	CmdAnsi_None,
+	CmdAnsi_Escaped,
+	CmdAnsi_CSI,
+} CmdAnsiState_t;
+
 typedef struct {
 	union {
 		struct {
@@ -91,6 +97,7 @@ typedef struct CmdLine_s {
 		bool echo;
 	}cfg;
 	char last_ch;
+	CmdAnsiState_t ansi;
 } CmdLine_t;
 
 /*

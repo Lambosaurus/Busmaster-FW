@@ -73,14 +73,14 @@ static const CmdArg_t gSpiInitArgs[] = {
 	},
 	{
 		.name = "mode",
-		.type = CmdArg_Number,
+		.type = CmdArg_Number | CmdArg_Optional,
 	}
 };
 
 static void SPICMD_Init(CmdLine_t * line, CmdArgValue_t * argv)
 {
 	uint32_t bitrate = argv[0].number;
-	uint32_t moden = argv[1].number;
+	uint32_t moden = argv[1].present ? argv[1].number : 0;
 
 	if (gSpiEnabled)
 	{
@@ -114,7 +114,7 @@ static void SPICMD_Init(CmdLine_t * line, CmdArgValue_t * argv)
 	uint32_t actual_bitrate = BUS_SPI->bitrate;
 	if (actual_bitrate != bitrate)
 	{
-		Cmd_Printf(line, CmdReply_Warn, "spi frequency truncated to %d\r\n", actual_bitrate);
+		COMCMD_PrintTruncation(line, "frequency", actual_bitrate);
 	}
 	COMCMD_PrintOk(line);
 }
@@ -258,7 +258,7 @@ static void SPICMD_Read(CmdLine_t * line, CmdArgValue_t * argv)
 	if (count > SPI_RX_MAX)
 	{
 		count = SPI_RX_MAX;
-		Cmd_Printf(line, CmdReply_Warn, "count truncated to %d\r\n", count);
+		COMCMD_PrintTruncation(line, "count", count);
 	}
 	uint8_t * data = Cmd_Malloc(line, count);
 

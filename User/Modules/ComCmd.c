@@ -91,6 +91,11 @@ void COMCMD_PrintNoInit(CmdLine_t * line, const char * name)
 	Cmd_Printf(line, CmdReply_Error, "%s not initialised\r\n", name);
 }
 
+void COMCMD_PrintTruncation(CmdLine_t * line, const char * name, uint32_t value)
+{
+	Cmd_Printf(line, CmdReply_Warn, "%s truncated to %d\r\n", name, value);
+}
+
 
 /*
  * PRIVATE FUNCTIONS

@@ -83,6 +83,7 @@ typedef struct CmdLine_s {
 		uint32_t index;
 		uint32_t size;
 		char * data;
+		uint32_t recall_index;
 	}bfr;
 	void (*print)(const uint8_t * data, uint32_t size);
 	const CmdNode_t * root;

@@ -11,6 +11,7 @@
  */
 
 #define CMD_MAX_LINE	256
+#define DEL				0x7F
 
 /*
  * PRIVATE TYPES
@@ -63,6 +64,7 @@ void Cmd_Init(CmdLine_t * line, const CmdNode_t * root, void (*print)(const uint
 	line->bfr.index = 0;
 	line->bfr.data = memory;
 	line->bfr.size = CMD_MAX_LINE;
+	line->bfr.recall_index = 0;
 	line->root = root;
 	line->print = print;
 
@@ -100,6 +102,22 @@ void Cmd_Free(CmdLine_t * line, void * ptr)
 	}
 }
 
+void Cmd_ClearLine(CmdLine_t * line)
+{
+	uint32_t size = line->bfr.index;
+	char * bfr = Cmd_Malloc(line, size);
+	memset(bfr, DEL, size);
+	line->print((uint8_t *)bfr, size);
+	line->bfr.recall_index = line->bfr.index;
+	line->bfr.index = 0;
+	Cmd_Free(line, bfr);
+}
+
+void Cmd_RecallLine(CmdLine_t * line)
+{
+	line->print( (uint8_t *)(line->bfr.data + line->bfr.index), line->bfr.recall_index - line->bfr.index);
+	line->bfr.index = line->bfr.recall_index;
+}
 
 void Cmd_HandleAnsi(CmdLine_t * line, char ch)
 {
@@ -121,7 +139,25 @@ void Cmd_HandleAnsi(CmdLine_t * line, char ch)
 			switch (ch)
 			{
 			case 'A': // up
+				if (line->bfr.recall_index > line->bfr.index)
+				{
+					Cmd_RecallLine(line);
+				}
+				else
+				{
+					Cmd_Bell(line);
+				}
+				break;
 			case 'B': // down
+				if (line->bfr.index)
+				{
+					Cmd_ClearLine(line);
+				}
+				else
+				{
+					Cmd_Bell(line);
+				}
+				break;
 			case 'C': // fwd
 			case 'D': // back
 			default:
@@ -194,6 +230,7 @@ void Cmd_Parse(CmdLine_t * line, const uint8_t * data, uint32_t count)
 						// A tab complete should not overflow the line buffer.
 						memcpy(line->bfr.data + line->bfr.index, append, append_count);
 						line->bfr.index += append_count;
+						line->bfr.recall_index = line->bfr.index;
 						line->print((uint8_t *)append, append_count);
 					}
 				}
@@ -210,7 +247,7 @@ void Cmd_Parse(CmdLine_t * line, const uint8_t * data, uint32_t count)
 					echo_data = data;
 				}
 				break;
-			case 127: // DEL char
+			case DEL:
 				if (line->bfr.index)
 				{
 					line->bfr.index--;
@@ -241,6 +278,7 @@ void Cmd_Parse(CmdLine_t * line, const uint8_t * data, uint32_t count)
 					// Discard the line
 					line->bfr.index = 0;
 				}
+				line->bfr.recall_index = line->bfr.index;
 				break;
 			}
 			line->last_ch = ch;

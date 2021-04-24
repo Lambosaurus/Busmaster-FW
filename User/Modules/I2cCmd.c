@@ -78,15 +78,34 @@ static const CmdArg_t gI2cInitArgs[] = {
 	},
 	{
 		.name = "pullup",
-		.type = CmdArg_Number,
+		.type = CmdArg_Number | CmdArg_Optional,
 	}
 };
 
 static void I2CCMD_Init(CmdLine_t * line, CmdArgValue_t * argv)
 {
 	uint32_t speed = argv[0].number;
-	uint32_t pullup = argv[1].number;
+	uint32_t pullup = argv[1].present ? argv[1].number : 0;
+
+	if (pullup != 0)
+	{
+		if (pullup < 1000)
+		{
+			pullup = 1000;
+			COMCMD_PrintTruncation(line, "pullup", pullup);
+		}
+		else if (pullup > 10000)
+		{
+			pullup = 10000;
+			COMCMD_PrintTruncation(line, "pullup", pullup);
+		}
+	}
 	I2CCMD_SetPullups(pullup);
+
+	if (speed < 1000)
+	{
+		Cmd_Prints(line, CmdReply_Warn, "Selected speed is low. The unit for speed is Hz, not KHz.\r\n");
+	}
 
 	if (gI2cEnabled)
 	{
@@ -98,7 +117,7 @@ static void I2CCMD_Init(CmdLine_t * line, CmdArgValue_t * argv)
 	uint32_t actual_speed = BUS_I2C->mode;
 	if (actual_speed != speed)
 	{
-		Cmd_Printf(line, CmdReply_Warn, "i2c speed truncated to %d\r\n", actual_speed);
+		COMCMD_PrintTruncation(line, "speed", actual_speed);
 	}
 	COMCMD_PrintOk(line);
 }
@@ -240,7 +259,7 @@ static void I2CCMD_Read(CmdLine_t * line, CmdArgValue_t * argv)
 	if (rxcount > I2C_RX_MAX)
 	{
 		rxcount = I2C_RX_MAX;
-		Cmd_Printf(line, CmdReply_Warn, "count truncated to %d\r\n", rxcount);
+		COMCMD_PrintTruncation(line, "count", rxcount);
 	}
 	uint8_t * rxdata = Cmd_Malloc(line, rxcount);
 
@@ -299,7 +318,7 @@ static void I2CCMD_Transfer(CmdLine_t * line, CmdArgValue_t * argv)
 	if (rxcount > I2C_RX_MAX)
 	{
 		rxcount = I2C_RX_MAX;
-		Cmd_Printf(line, CmdReply_Warn, "count truncated to %d\r\n", rxcount);
+		COMCMD_PrintTruncation(line, "count", rxcount);
 	}
 	uint8_t * rxdata = Cmd_Malloc(line, rxcount);
 

@@ -22,6 +22,9 @@ typedef enum {
 	CmdArg_Number,
 	CmdArg_Bytes,
 	CmdArg_String,
+
+	CmdArg_Mask = 0x7F,
+	CmdArg_Optional = 0x80,
 } CmdArgType_t;
 
 typedef enum {
@@ -50,6 +53,7 @@ typedef struct {
 		const char * str;
 		bool boolean;
 	};
+	bool present;
 } CmdArgValue_t;
 
 typedef struct CmdNode_s {

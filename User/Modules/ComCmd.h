@@ -22,5 +22,6 @@ void COMCMD_PrintOk(CmdLine_t * line);
 void COMCMD_PrintError(CmdLine_t * line);
 void COMCMD_PrintWritten(CmdLine_t * line, uint32_t count);
 void COMCMD_PrintNoInit(CmdLine_t * line, const char * name);
+void COMCMD_PrintTruncation(CmdLine_t * line, const char * name, uint32_t value);
 
 #endif //COMCMD_H

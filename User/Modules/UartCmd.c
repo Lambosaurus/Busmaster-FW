@@ -125,7 +125,7 @@ static const CmdNode_t gUartWriteNode = {
 static const CmdArg_t gUartReadArgs[] = {
 	{
 		.name = "count",
-		.type = CmdArg_Number,
+		.type = CmdArg_Number | CmdArg_Optional,
 	}
 };
 
@@ -137,11 +137,11 @@ static void UARTCMD_Read(CmdLine_t * line, CmdArgValue_t * argv)
 		return;
 	}
 
-	uint32_t count = argv[0].number;
+	uint32_t count = argv[0].present ? argv[0].number : UART_RX_MAX;
 	if (count > UART_RX_MAX)
 	{
 		count = UART_RX_MAX;
-		Cmd_Printf(line, CmdReply_Warn, "count truncated to %d\r\n", count);
+		COMCMD_PrintTruncation(line, "count", count);
 	}
 	uint8_t * data = Cmd_Malloc(line, count);
 	uint32_t read = UART_Read(BUS_UART, data, count);

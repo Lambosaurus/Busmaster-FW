@@ -104,18 +104,25 @@ void Cmd_Free(CmdLine_t * line, void * ptr)
 
 void Cmd_ClearLine(CmdLine_t * line)
 {
-	uint32_t size = line->bfr.index;
-	char * bfr = Cmd_Malloc(line, size);
-	memset(bfr, DEL, size);
-	line->print((uint8_t *)bfr, size);
+	if (line->cfg.echo)
+	{
+		uint32_t size = line->bfr.index;
+		char * bfr = Cmd_Malloc(line, size);
+		memset(bfr, DEL, size);
+		line->print((uint8_t *)bfr, size);
+		Cmd_Free(line, bfr);
+	}
 	line->bfr.recall_index = line->bfr.index;
 	line->bfr.index = 0;
-	Cmd_Free(line, bfr);
+
 }
 
 void Cmd_RecallLine(CmdLine_t * line)
 {
-	line->print( (uint8_t *)(line->bfr.data + line->bfr.index), line->bfr.recall_index - line->bfr.index);
+	if (line->cfg.echo)
+	{
+		line->print( (uint8_t *)(line->bfr.data + line->bfr.index), line->bfr.recall_index - line->bfr.index);
+	}
 	line->bfr.index = line->bfr.recall_index;
 }
 

@@ -428,6 +428,9 @@ static CmdTokenStatus_t Cmd_ParseToken(const char ** str, CmdToken_t * token)
 			}
 			head++;
 		}
+
+		token->size = head - token->str;
+		head++;
 	}
 	else // Non quoted token
 	{
@@ -442,10 +445,12 @@ static CmdTokenStatus_t Cmd_ParseToken(const char ** str, CmdToken_t * token)
 			}
 			head++;
 		}
+
+		token->size = head - token->str;
 	}
 
-	token->size = head - token->str;
 	*str = head;
+
 	return CmdToken_Ok;
 }
 

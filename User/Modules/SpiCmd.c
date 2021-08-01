@@ -87,20 +87,20 @@ static void SPICMD_Init(Cmd_Line_t * line, Cmd_ArgValue_t * argv)
 		SPI_Deinit(BUS_SPI);
 	}
 
-	SPIMode_t mode;
+	SPI_Mode_t mode;
 	switch (moden)
 	{
 	case 0:
-		mode = SPI_MODE0;
+		mode = SPI_Mode_0;
 		break;
 	case 1:
-		mode = SPI_MODE1;
+		mode = SPI_Mode_1;
 		break;
 	case 2:
-		mode = SPI_MODE2;
+		mode = SPI_Mode_2;
 		break;
 	case 3:
-		mode = SPI_MODE3;
+		mode = SPI_Mode_3;
 		break;
 	default:
 		Cmd_Prints(line, Cmd_Reply_Error, "spi mode must be 0-3\r\n");

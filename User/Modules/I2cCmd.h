@@ -1,7 +1,7 @@
 #ifndef I2CCMD_H
 #define I2CCMD_H
 
-#include <Cmd.h>
+#include "Cmd.h"
 #include "STM32X.h"
 
 /*

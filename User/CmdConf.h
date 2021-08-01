@@ -2,6 +2,7 @@
 #define COMMAND_CONF_H
 
 
+
 /*
  * BUFFER CONFIGURATION
  */
@@ -11,6 +12,8 @@
 
 // Maximum line length
 #define CMD_MAX_LINE	256
+
+
 
 /*
  * TERMINAL INPUT CONFIGURATION
@@ -22,6 +25,8 @@
 
 // Allow tab completion of commands
 #define CMD_USE_TABCOMPLETE
+
+
 
 /*
  * TERMINAL OUTPUT CONFIGURATION
@@ -38,12 +43,33 @@
 // Emit color output sequences, for warnings and errors.
 #define CMD_USE_COLOR
 
+
+
 /*
- * ARGUMENT PARSING CONFIGURATION
- * 		These support different argument format options
+ * ARGUMENT CONFIGURATION
+ * 		These support different argument options
  */
 
-// Support escape sequences for string parsing and formatting
-#define CMD_STRING_ESC
+// Support for booleans as argument input type
+#define CMD_USE_BOOL_ARGS
+
+// Support for strings as argument input type
+#define CMD_USE_STRING_ARGS
+
+// Supports bytes as an argument input type
+#define CMD_USE_BYTE_ARGS
+
+// Support backslash escape sequences for string parsing and formatting
+// This supports byte literals "\x00", delimiters "\"", and control chars "\a\r\n\0"
+#define CMD_USE_STRING_ESC
+
+// Supports hexadecimal input types for numbers
+#define CMD_USE_NUMBER_HEX
+
+// Supports engineering notation input types for numbers
+#define CMD_USE_NUMBER_ENG
+
+
+
 
 #endif //COMMAND_CONF_H

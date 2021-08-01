@@ -1,7 +1,7 @@
 #ifndef SPICMD_H
 #define SPICMD_H
 
-#include <Cmd.h>
+#include "Cmd.h"
 #include "STM32X.h"
 
 /*

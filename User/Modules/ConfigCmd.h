@@ -1,7 +1,7 @@
 #ifndef CONFIGCMD_H
 #define CONFIGCMD_H
 
-#include <Cmd.h>
+#include "Cmd.h"
 #include "STM32X.h"
 
 /*

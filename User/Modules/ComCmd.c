@@ -54,7 +54,7 @@ void COMCMD_PrintRead(Cmd_Line_t * line, uint8_t * data, uint32_t count)
 			{
 				bfr[written++] = delimiter;
 			}
-			written += Cmd_FormatHex(bfr + written, data, count, space);
+			written += Cmd_FormatBytes(bfr + written, data, count, space);
 			if (delimiter)
 			{
 				// Close braces are always 2 chars after the open.

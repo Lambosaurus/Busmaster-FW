@@ -1,3 +1,6 @@
 [submodule "STM32X"]
 	path = STM32X
 	url = https://github.com/Lambosaurus/STM32X.git
+[submodule "Cmd"]
+	path = Cmd
+	url = https://github.com/Lambosaurus/cmd-l.git

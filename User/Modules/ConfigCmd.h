@@ -1,8 +1,8 @@
 #ifndef CONFIGCMD_H
 #define CONFIGCMD_H
 
+#include <Cmd.h>
 #include "STM32X.h"
-#include "Command.h"
 
 /*
  * PUBLIC DEFINITIONS
@@ -29,6 +29,6 @@ extern Config_t gConfig;
  * PUBLIC FUNCTIONS
  */
 
-const CmdNode_t * CONFIGCMD_InitMenu(void);
+const Cmd_Node_t * CONFIGCMD_InitMenu(void);
 
 #endif //CONFIGCMD_H

@@ -1,7 +1,7 @@
 
+#include <CmdParse.h>
 #include "ComCmd.h"
 
-#include "NParse.h"
 #include <stdio.h>
 #include "ConfigCmd.h"
 
@@ -25,7 +25,7 @@
  * PUBLIC FUNCTIONS
  */
 
-void COMCMD_PrintRead(CmdLine_t * line, uint8_t * data, uint32_t count)
+void COMCMD_PrintRead(Cmd_Line_t * line, uint8_t * data, uint32_t count)
 {
 	if (count > 0)
 	{
@@ -37,9 +37,9 @@ void COMCMD_PrintRead(CmdLine_t * line, uint8_t * data, uint32_t count)
 			char * bfr = Cmd_Malloc(line, size);
 			uint32_t written = 0;
 			written += snprintf(bfr, size, "read: %c", delimiter);
-			written += NFormat_String(bfr + written, size - written, data, count, delimiter);
+			written += Cmd_FormatString(bfr + written, size - written, data, count, delimiter);
 			written += snprintf(bfr + written, size - written, "%c\r\n", delimiter);
-			Cmd_Print(line, CmdReply_Info, bfr, written);
+			Cmd_Print(line, Cmd_Reply_Info, bfr, written);
 			Cmd_Free(line, bfr);
 		}
 		else
@@ -54,46 +54,46 @@ void COMCMD_PrintRead(CmdLine_t * line, uint8_t * data, uint32_t count)
 			{
 				bfr[written++] = delimiter;
 			}
-			written += NFormat_Hex(bfr + written, data, count, space);
+			written += Cmd_FormatHex(bfr + written, data, count, space);
 			if (delimiter)
 			{
 				// Close braces are always 2 chars after the open.
 				bfr[written++] = delimiter + 2;
 			}
 			written += snprintf(bfr + written, size - written, "\r\n");
-			Cmd_Print(line, CmdReply_Info, bfr, written);
+			Cmd_Print(line, Cmd_Reply_Info, bfr, written);
 			Cmd_Free(line, bfr);
 		}
 	}
 	else
 	{
-		Cmd_Prints(line, CmdReply_Info, "read: 0 bytes\r\n");
+		Cmd_Prints(line, Cmd_Reply_Info, "read: 0 bytes\r\n");
 	}
 }
 
-void COMCMD_PrintOk(CmdLine_t * line)
+void COMCMD_PrintOk(Cmd_Line_t * line)
 {
-	Cmd_Prints(line, CmdReply_Info, "ok\r\n");
+	Cmd_Prints(line, Cmd_Reply_Info, "ok\r\n");
 }
 
-void COMCMD_PrintError(CmdLine_t * line)
+void COMCMD_PrintError(Cmd_Line_t * line)
 {
-	Cmd_Prints(line, CmdReply_Error, "error\r\n");
+	Cmd_Prints(line, Cmd_Reply_Error, "error\r\n");
 }
 
-void COMCMD_PrintWritten(CmdLine_t * line, uint32_t count)
+void COMCMD_PrintWritten(Cmd_Line_t * line, uint32_t count)
 {
-	Cmd_Printf(line, CmdReply_Info, "%d bytes written\r\n", count);
+	Cmd_Printf(line, Cmd_Reply_Info, "%d bytes written\r\n", count);
 }
 
-void COMCMD_PrintNoInit(CmdLine_t * line, const char * name)
+void COMCMD_PrintNoInit(Cmd_Line_t * line, const char * name)
 {
-	Cmd_Printf(line, CmdReply_Error, "%s not initialised\r\n", name);
+	Cmd_Printf(line, Cmd_Reply_Error, "%s not initialised\r\n", name);
 }
 
-void COMCMD_PrintTruncation(CmdLine_t * line, const char * name, uint32_t value)
+void COMCMD_PrintTruncation(Cmd_Line_t * line, const char * name, uint32_t value)
 {
-	Cmd_Printf(line, CmdReply_Warn, "%s truncated to %d\r\n", name, value);
+	Cmd_Printf(line, Cmd_Reply_Warn, "%s truncated to %d\r\n", name, value);
 }
 
 

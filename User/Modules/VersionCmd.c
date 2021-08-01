@@ -18,13 +18,13 @@
  * PRIVATE VARIABLES
  */
 
-static const CmdNode_t gVersionNode;
+static const Cmd_Node_t gVersionNode;
 
 /*
  * PUBLIC FUNCTIONS
  */
 
-const CmdNode_t * VERSIONCMD_InitMenu(void)
+const Cmd_Node_t * VERSIONCMD_InitMenu(void)
 {
 	return &gVersionNode;
 }
@@ -37,13 +37,13 @@ const CmdNode_t * VERSIONCMD_InitMenu(void)
  * FUNCTION NODES
  */
 
-static void VERSIONCMD_PrintVersion(CmdLine_t * line, CmdArgValue_t * args)
+static void VERSIONCMD_PrintVersion(Cmd_Line_t * line, Cmd_ArgValue_t * args)
 {
-	Cmd_Prints(line, CmdReply_Info, "Busmaster v0.9\r\n");
+	Cmd_Prints(line, Cmd_Reply_Info, "Busmaster v0.9\r\n");
 }
 
-static const CmdNode_t gVersionNode = {
-	.type = CmdNode_Function,
+static const Cmd_Node_t gVersionNode = {
+	.type = Cmd_Node_Function,
 	.name = "version",
 	.func = {
 		.arglen = 0,

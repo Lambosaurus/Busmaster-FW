@@ -26,13 +26,13 @@ static void I2CCMD_SetPullups(uint32_t r);
  */
 
 static bool gI2cEnabled;
-const static CmdNode_t gI2cMenu;
+const static Cmd_Node_t gI2cMenu;
 
 /*
  * PUBLIC FUNCTIONS
  */
 
-const CmdNode_t * I2CCMD_InitMenu(void)
+const Cmd_Node_t * I2CCMD_InitMenu(void)
 {
 	MCP425_Init();
 	I2CCMD_SetPullups(0);
@@ -71,18 +71,18 @@ static void I2CCMD_SetPullups(uint32_t r)
  * FUNCTION NODES
  */
 
-static const CmdArg_t gI2cInitArgs[] = {
+static const Cmd_Arg_t gI2cInitArgs[] = {
 	{
 		.name = "speed",
-		.type = CmdArg_Number,
+		.type = Cmd_Arg_Number,
 	},
 	{
 		.name = "pullup",
-		.type = CmdArg_Number | CmdArg_Optional,
+		.type = Cmd_Arg_Number | Cmd_Arg_Optional,
 	}
 };
 
-static void I2CCMD_Init(CmdLine_t * line, CmdArgValue_t * argv)
+static void I2CCMD_Init(Cmd_Line_t * line, Cmd_ArgValue_t * argv)
 {
 	uint32_t speed = argv[0].number;
 	uint32_t pullup = argv[1].present ? argv[1].number : 0;
@@ -104,7 +104,7 @@ static void I2CCMD_Init(CmdLine_t * line, CmdArgValue_t * argv)
 
 	if (speed < 1000)
 	{
-		Cmd_Prints(line, CmdReply_Warn, "Selected speed is low. The unit for speed is Hz, not KHz.\r\n");
+		Cmd_Prints(line, Cmd_Reply_Warn, "Selected speed is low. The unit for speed is Hz, not KHz.\r\n");
 	}
 
 	if (gI2cEnabled)
@@ -122,8 +122,8 @@ static void I2CCMD_Init(CmdLine_t * line, CmdArgValue_t * argv)
 	COMCMD_PrintOk(line);
 }
 
-static const CmdNode_t gI2cInitNode = {
-	.type = CmdNode_Function,
+static const Cmd_Node_t gI2cInitNode = {
+	.type = Cmd_Node_Function,
 	.name = "init",
 	.func = {
 		.args = gI2cInitArgs,
@@ -132,7 +132,7 @@ static const CmdNode_t gI2cInitNode = {
 	}
 };
 
-static void I2CCMD_Deinit(CmdLine_t * line, CmdArgValue_t * argv)
+static void I2CCMD_Deinit(Cmd_Line_t * line, Cmd_ArgValue_t * argv)
 {
 	I2CCMD_SetPullups(0);
 
@@ -144,8 +144,8 @@ static void I2CCMD_Deinit(CmdLine_t * line, CmdArgValue_t * argv)
 	COMCMD_PrintOk(line);
 }
 
-static const CmdNode_t gI2cDeinitNode = {
-	.type = CmdNode_Function,
+static const Cmd_Node_t gI2cDeinitNode = {
+	.type = Cmd_Node_Function,
 	.name = "deinit",
 	.func = {
 		.arglen = 0,
@@ -153,7 +153,7 @@ static const CmdNode_t gI2cDeinitNode = {
 	}
 };
 
-static void I2CCMD_Scan(CmdLine_t * line, CmdArgValue_t * argv)
+static void I2CCMD_Scan(Cmd_Line_t * line, Cmd_ArgValue_t * argv)
 {
 	if (!gI2cEnabled)
 	{
@@ -167,14 +167,14 @@ static void I2CCMD_Scan(CmdLine_t * line, CmdArgValue_t * argv)
 		if (I2C_Scan(BUS_I2C, i))
 		{
 			found += 1;
-			Cmd_Printf(line, CmdReply_Info, "device found on 0x%02X\r\n", i);
+			Cmd_Printf(line, Cmd_Reply_Info, "device found on 0x%02X\r\n", i);
 		}
 	}
-	Cmd_Printf(line, CmdReply_Info, "%d devices found.\r\n", found);
+	Cmd_Printf(line, Cmd_Reply_Info, "%d devices found.\r\n", found);
 }
 
-static const CmdNode_t gI2cScanNode = {
-	.type = CmdNode_Function,
+static const Cmd_Node_t gI2cScanNode = {
+	.type = Cmd_Node_Function,
 	.name = "scan",
 	.func = {
 		.arglen = 0,
@@ -182,18 +182,18 @@ static const CmdNode_t gI2cScanNode = {
 	}
 };
 
-static const CmdArg_t gI2cWriteArgs[] = {
+static const Cmd_Arg_t gI2cWriteArgs[] = {
 	{
 		.name = "address",
-		.type = CmdArg_Number,
+		.type = Cmd_Arg_Number,
 	},
 	{
 		.name = "payload",
-		.type = CmdArg_Bytes,
+		.type = Cmd_Arg_Bytes,
 	}
 };
 
-static void I2CCMD_Write(CmdLine_t * line, CmdArgValue_t * argv)
+static void I2CCMD_Write(Cmd_Line_t * line, Cmd_ArgValue_t * argv)
 {
 	if (!gI2cEnabled)
 	{
@@ -202,10 +202,10 @@ static void I2CCMD_Write(CmdLine_t * line, CmdArgValue_t * argv)
 	}
 
 	uint32_t address = argv[0].number;
-	CmdArgValue_t * txdata = &argv[1];
+	Cmd_ArgValue_t * txdata = &argv[1];
 	if (address > 0x7F)
 	{
-		Cmd_Prints(line, CmdReply_Error, "I2C address cannot exceed 0x7F\r\n");
+		Cmd_Prints(line, Cmd_Reply_Error, "I2C address cannot exceed 0x7F\r\n");
 		return;
 	}
 
@@ -219,8 +219,8 @@ static void I2CCMD_Write(CmdLine_t * line, CmdArgValue_t * argv)
 	}
 }
 
-static const CmdNode_t gI2cWriteNode = {
-	.type = CmdNode_Function,
+static const Cmd_Node_t gI2cWriteNode = {
+	.type = Cmd_Node_Function,
 	.name = "write",
 	.func = {
 		.args = gI2cWriteArgs,
@@ -229,18 +229,18 @@ static const CmdNode_t gI2cWriteNode = {
 	}
 };
 
-static const CmdArg_t gI2cReadArgs[] = {
+static const Cmd_Arg_t gI2cReadArgs[] = {
 	{
 		.name = "address",
-		.type = CmdArg_Number,
+		.type = Cmd_Arg_Number,
 	},
 	{
 		.name = "count",
-		.type = CmdArg_Number,
+		.type = Cmd_Arg_Number,
 	}
 };
 
-static void I2CCMD_Read(CmdLine_t * line, CmdArgValue_t * argv)
+static void I2CCMD_Read(Cmd_Line_t * line, Cmd_ArgValue_t * argv)
 {
 	if (!gI2cEnabled)
 	{
@@ -253,7 +253,7 @@ static void I2CCMD_Read(CmdLine_t * line, CmdArgValue_t * argv)
 
 	if (address > 0x7F)
 	{
-		Cmd_Prints(line, CmdReply_Error, "I2C address cannot exceed 0x7F\r\n");
+		Cmd_Prints(line, Cmd_Reply_Error, "I2C address cannot exceed 0x7F\r\n");
 		return;
 	}
 	if (rxcount > I2C_RX_MAX)
@@ -273,8 +273,8 @@ static void I2CCMD_Read(CmdLine_t * line, CmdArgValue_t * argv)
 	}
 }
 
-static const CmdNode_t gI2cReadNode = {
-	.type = CmdNode_Function,
+static const Cmd_Node_t gI2cReadNode = {
+	.type = Cmd_Node_Function,
 	.name = "read",
 	.func = {
 		.args = gI2cReadArgs,
@@ -283,22 +283,22 @@ static const CmdNode_t gI2cReadNode = {
 	}
 };
 
-static const CmdArg_t gI2cTransferArgs[] = {
+static const Cmd_Arg_t gI2cTransferArgs[] = {
 	{
 		.name = "address",
-		.type = CmdArg_Number,
+		.type = Cmd_Arg_Number,
 	},
 	{
 		.name = "payload",
-		.type = CmdArg_Bytes,
+		.type = Cmd_Arg_Bytes,
 	},
 	{
 		.name = "count",
-		.type = CmdArg_Number,
+		.type = Cmd_Arg_Number,
 	}
 };
 
-static void I2CCMD_Transfer(CmdLine_t * line, CmdArgValue_t * argv)
+static void I2CCMD_Transfer(Cmd_Line_t * line, Cmd_ArgValue_t * argv)
 {
 	if (!gI2cEnabled)
 	{
@@ -307,12 +307,12 @@ static void I2CCMD_Transfer(CmdLine_t * line, CmdArgValue_t * argv)
 	}
 
 	uint32_t address = argv[0].number;
-	CmdArgValue_t * txdata = &argv[1];
+	Cmd_ArgValue_t * txdata = &argv[1];
 	uint32_t rxcount = argv[2].number;
 
 	if (address > 0x7F)
 	{
-		Cmd_Prints(line, CmdReply_Error, "I2C address cannot exceed 0x7F\r\n");
+		Cmd_Prints(line, Cmd_Reply_Error, "I2C address cannot exceed 0x7F\r\n");
 		return;
 	}
 	if (rxcount > I2C_RX_MAX)
@@ -333,8 +333,8 @@ static void I2CCMD_Transfer(CmdLine_t * line, CmdArgValue_t * argv)
 	}
 }
 
-static const CmdNode_t gI2cTransferNode = {
-	.type = CmdNode_Function,
+static const Cmd_Node_t gI2cTransferNode = {
+	.type = Cmd_Node_Function,
 	.name = "transfer",
 	.func = {
 		.args = gI2cTransferArgs,
@@ -343,7 +343,7 @@ static const CmdNode_t gI2cTransferNode = {
 	}
 };
 
-static const CmdNode_t * gI2cFunctions[] = {
+static const Cmd_Node_t * gI2cFunctions[] = {
 	&gI2cInitNode,
 	&gI2cDeinitNode,
 	&gI2cScanNode,
@@ -352,8 +352,8 @@ static const CmdNode_t * gI2cFunctions[] = {
 	&gI2cTransferNode,
 };
 
-static const CmdNode_t gI2cMenu = {
-	.type = CmdNode_Menu,
+static const Cmd_Node_t gI2cMenu = {
+	.type = Cmd_Node_Menu,
 	.name = "i2c",
 	.menu = {
 		.count = LENGTH(gI2cFunctions),

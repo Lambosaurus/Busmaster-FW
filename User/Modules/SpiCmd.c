@@ -27,13 +27,13 @@ static void SPICMD_CS_Deselect(void);
 
 static bool gSpiEnabled;
 static bool gSpiAutoSelect;
-static const CmdNode_t gSpiMenu;
+static const Cmd_Node_t gSpiMenu;
 
 /*
  * PUBLIC FUNCTIONS
  */
 
-const CmdNode_t * SPICMD_InitMenu(void)
+const Cmd_Node_t * SPICMD_InitMenu(void)
 {
 	gSpiEnabled = false;
 	gSpiAutoSelect = true;
@@ -66,18 +66,18 @@ static void SPICMD_CS_Deselect(void)
  * FUNCITON NODES
  */
 
-static const CmdArg_t gSpiInitArgs[] = {
+static const Cmd_Arg_t gSpiInitArgs[] = {
 	{
 		.name = "frequency",
-		.type = CmdArg_Number,
+		.type = Cmd_Arg_Number,
 	},
 	{
 		.name = "mode",
-		.type = CmdArg_Number | CmdArg_Optional,
+		.type = Cmd_Arg_Number | Cmd_Arg_Optional,
 	}
 };
 
-static void SPICMD_Init(CmdLine_t * line, CmdArgValue_t * argv)
+static void SPICMD_Init(Cmd_Line_t * line, Cmd_ArgValue_t * argv)
 {
 	uint32_t bitrate = argv[0].number;
 	uint32_t moden = argv[1].present ? argv[1].number : 0;
@@ -103,7 +103,7 @@ static void SPICMD_Init(CmdLine_t * line, CmdArgValue_t * argv)
 		mode = SPI_MODE3;
 		break;
 	default:
-		Cmd_Prints(line, CmdReply_Error, "spi mode must be 0-3\r\n");
+		Cmd_Prints(line, Cmd_Reply_Error, "spi mode must be 0-3\r\n");
 		return;
 	}
 
@@ -119,8 +119,8 @@ static void SPICMD_Init(CmdLine_t * line, CmdArgValue_t * argv)
 	COMCMD_PrintOk(line);
 }
 
-static const CmdNode_t gSpiInitNode = {
-	.type = CmdNode_Function,
+static const Cmd_Node_t gSpiInitNode = {
+	.type = Cmd_Node_Function,
 	.name = "init",
 	.func = {
 		.args = gSpiInitArgs,
@@ -129,7 +129,7 @@ static const CmdNode_t gSpiInitNode = {
 	}
 };
 
-static void SPICMD_Deinit(CmdLine_t * line, CmdArgValue_t * argv)
+static void SPICMD_Deinit(Cmd_Line_t * line, Cmd_ArgValue_t * argv)
 {
 	GPIO_Deinit(SPI_CS_GPIO, SPI_CS_PIN);
 	if (gSpiEnabled)
@@ -140,8 +140,8 @@ static void SPICMD_Deinit(CmdLine_t * line, CmdArgValue_t * argv)
 	COMCMD_PrintOk(line);
 }
 
-static const CmdNode_t gSpiDeinitNode = {
-	.type = CmdNode_Function,
+static const Cmd_Node_t gSpiDeinitNode = {
+	.type = Cmd_Node_Function,
 	.name = "deinit",
 	.func = {
 		.arglen = 0,
@@ -149,14 +149,14 @@ static const CmdNode_t gSpiDeinitNode = {
 	}
 };
 
-static const CmdArg_t gSpiSelectArgs[] = {
+static const Cmd_Arg_t gSpiSelectArgs[] = {
 	{
 		.name = "enable",
-		.type = CmdArg_Bool,
+		.type = Cmd_Arg_Bool,
 	}
 };
 
-static void SPICMD_Select(CmdLine_t * line, CmdArgValue_t * argv)
+static void SPICMD_Select(Cmd_Line_t * line, Cmd_ArgValue_t * argv)
 {
 	uint32_t enable = argv[0].boolean;
 	if (!gSpiEnabled)
@@ -167,15 +167,15 @@ static void SPICMD_Select(CmdLine_t * line, CmdArgValue_t * argv)
 
 	if (gSpiAutoSelect)
 	{
-		Cmd_Prints(line, CmdReply_Info, "auto select disabled\r\n");
+		Cmd_Prints(line, Cmd_Reply_Info, "auto select disabled\r\n");
 		gSpiAutoSelect = false;
 	}
 	GPIO_Write(SPI_CS_GPIO, SPI_CS_PIN, !enable);
 	COMCMD_PrintOk(line);
 }
 
-static const CmdNode_t gSpiSelectNode = {
-	.type = CmdNode_Function,
+static const Cmd_Node_t gSpiSelectNode = {
+	.type = Cmd_Node_Function,
 	.name = "select",
 	.func = {
 		.arglen = LENGTH(gSpiSelectArgs),
@@ -184,7 +184,7 @@ static const CmdNode_t gSpiSelectNode = {
 	}
 };
 
-static void SPICMD_AutoSelect(CmdLine_t * line, CmdArgValue_t * argv)
+static void SPICMD_AutoSelect(Cmd_Line_t * line, Cmd_ArgValue_t * argv)
 {
 	if (!gSpiEnabled)
 	{
@@ -193,11 +193,11 @@ static void SPICMD_AutoSelect(CmdLine_t * line, CmdArgValue_t * argv)
 	}
 	gSpiAutoSelect = true;
 	GPIO_Set(SPI_CS_GPIO, SPI_CS_PIN);
-	Cmd_Prints(line, CmdReply_Info, "auto select enabled\r\n");
+	Cmd_Prints(line, Cmd_Reply_Info, "auto select enabled\r\n");
 }
 
-static const CmdNode_t gSpiAutoselectNode = {
-	.type = CmdNode_Function,
+static const Cmd_Node_t gSpiAutoselectNode = {
+	.type = Cmd_Node_Function,
 	.name = "autoselect",
 	.func = {
 		.arglen = 0,
@@ -205,14 +205,14 @@ static const CmdNode_t gSpiAutoselectNode = {
 	}
 };
 
-static const CmdArg_t gSpiWriteArgs[] = {
+static const Cmd_Arg_t gSpiWriteArgs[] = {
 	{
 		.name = "payload",
-		.type = CmdArg_Bytes,
+		.type = Cmd_Arg_Bytes,
 	}
 };
 
-static void SPICMD_Write(CmdLine_t * line, CmdArgValue_t * argv)
+static void SPICMD_Write(Cmd_Line_t * line, Cmd_ArgValue_t * argv)
 {
 	if (!gSpiEnabled)
 	{
@@ -220,7 +220,7 @@ static void SPICMD_Write(CmdLine_t * line, CmdArgValue_t * argv)
 		return;
 	}
 
-	CmdArgValue_t * data = &argv[0];
+	Cmd_ArgValue_t * data = &argv[0];
 
 	SPICMD_CS_Select();
 	SPI_Write(BUS_SPI, data->bytes.data, data->bytes.size);
@@ -229,8 +229,8 @@ static void SPICMD_Write(CmdLine_t * line, CmdArgValue_t * argv)
 	COMCMD_PrintWritten(line, data->bytes.size);
 }
 
-static const CmdNode_t gSpiWriteNode = {
-	.type = CmdNode_Function,
+static const Cmd_Node_t gSpiWriteNode = {
+	.type = Cmd_Node_Function,
 	.name = "write",
 	.func = {
 		.args = gSpiWriteArgs,
@@ -239,14 +239,14 @@ static const CmdNode_t gSpiWriteNode = {
 	}
 };
 
-static const CmdArg_t gSpiReadArgs[] = {
+static const Cmd_Arg_t gSpiReadArgs[] = {
 	{
 		.name = "count",
-		.type = CmdArg_Number,
+		.type = Cmd_Arg_Number,
 	}
 };
 
-static void SPICMD_Read(CmdLine_t * line, CmdArgValue_t * argv)
+static void SPICMD_Read(Cmd_Line_t * line, Cmd_ArgValue_t * argv)
 {
 	if (!gSpiEnabled)
 	{
@@ -269,8 +269,8 @@ static void SPICMD_Read(CmdLine_t * line, CmdArgValue_t * argv)
 	COMCMD_PrintRead(line, data, count);
 }
 
-static const CmdNode_t gSpiReadNode = {
-	.type = CmdNode_Function,
+static const Cmd_Node_t gSpiReadNode = {
+	.type = Cmd_Node_Function,
 	.name = "read",
 	.func = {
 		.args = gSpiReadArgs,
@@ -279,14 +279,14 @@ static const CmdNode_t gSpiReadNode = {
 	}
 };
 
-static const CmdArg_t gSpiTransferArgs[] = {
+static const Cmd_Arg_t gSpiTransferArgs[] = {
 	{
 		.name = "payload",
-		.type = CmdArg_Bytes,
+		.type = Cmd_Arg_Bytes,
 	}
 };
 
-static void SPICMD_Transfer(CmdLine_t * line, CmdArgValue_t * argv)
+static void SPICMD_Transfer(Cmd_Line_t * line, Cmd_ArgValue_t * argv)
 {
 	if (!gSpiEnabled)
 	{
@@ -294,7 +294,7 @@ static void SPICMD_Transfer(CmdLine_t * line, CmdArgValue_t * argv)
 		return;
 	}
 
-	CmdArgValue_t * data = &argv[0];
+	Cmd_ArgValue_t * data = &argv[0];
 
 	// Write straight into the tx buffer.
 	SPICMD_CS_Select();
@@ -304,8 +304,8 @@ static void SPICMD_Transfer(CmdLine_t * line, CmdArgValue_t * argv)
 	COMCMD_PrintRead(line, data->bytes.data, data->bytes.size);
 }
 
-static const CmdNode_t gSpiTransferNode = {
-	.type = CmdNode_Function,
+static const Cmd_Node_t gSpiTransferNode = {
+	.type = Cmd_Node_Function,
 	.name = "transfer",
 	.func = {
 		.args = gSpiTransferArgs,
@@ -314,7 +314,7 @@ static const CmdNode_t gSpiTransferNode = {
 	}
 };
 
-static const CmdNode_t * gSpiFunctions[] = {
+static const Cmd_Node_t * gSpiFunctions[] = {
 		&gSpiInitNode,
 		&gSpiDeinitNode,
 		&gSpiWriteNode,
@@ -324,8 +324,8 @@ static const CmdNode_t * gSpiFunctions[] = {
 		&gSpiSelectNode,
 };
 
-static const CmdNode_t gSpiMenu = {
-	.type = CmdNode_Menu,
+static const Cmd_Node_t gSpiMenu = {
+	.type = Cmd_Node_Menu,
 	.name = "spi",
 	.menu = {
 		.nodes = gSpiFunctions,

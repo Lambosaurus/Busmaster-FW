@@ -1,8 +1,8 @@
 #ifndef AUXCMDS_H
 #define AUXCMDS_H
 
+#include <Cmd.h>
 #include "STM32X.h"
-#include "Command.h"
 
 /*
  * PUBLIC DEFINITIONS
@@ -16,8 +16,8 @@
  * PUBLIC FUNCTIONS
  */
 
-const CmdNode_t * AUXCMD_InitTemp(void);
-const CmdNode_t * AUXCMD_InitVref(void);
-const CmdNode_t * AUXCMD_InitVout(void);
+const Cmd_Node_t * AUXCMD_InitTemp(void);
+const Cmd_Node_t * AUXCMD_InitVref(void);
+const Cmd_Node_t * AUXCMD_InitVout(void);
 
 #endif //VOUTCMD_H

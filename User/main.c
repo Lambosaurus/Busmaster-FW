@@ -57,8 +57,9 @@ int main(void)
 
 	Cmd_Line_t line;
 	Cmd_Init(&line, &gRootMenu, USB_Write, (void*)gMemory, sizeof(gMemory));
-
+	line.cfg.prompt = true;
 	USB_Init();
+	Cmd_Start(&line);
 
 	MAIN_LedGrn();
 	while(1)

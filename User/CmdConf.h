@@ -26,6 +26,8 @@
 // Allow tab completion of commands
 #define CMD_USE_TABCOMPLETE
 
+// This token will produce info on the specified menu or or functionp
+#define CMD_HELP_TOKEN		"?"
 
 
 /*
@@ -43,7 +45,11 @@
 // Emit color output sequences, for warnings and errors.
 #define CMD_USE_COLOR
 
+// A line starting sequence printed at the start of each new line
+#define CMD_PROMPT		"> "
 
+// The line ending sequence on internally generated replies.
+#define CMD_LINE_END	"\r\n"
 
 /*
  * ARGUMENT CONFIGURATION

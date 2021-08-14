@@ -39,7 +39,7 @@ const Cmd_Node_t * VERSIONCMD_InitMenu(void)
 
 static void VERSIONCMD_PrintVersion(Cmd_Line_t * line, Cmd_ArgValue_t * args)
 {
-	Cmd_Prints(line, Cmd_Reply_Info, "Busmaster v0.9\r\n");
+	Cmd_Prints(line, Cmd_Reply_Info, "Busmaster v0.10\r\n");
 }
 
 static const Cmd_Node_t gVersionNode = {

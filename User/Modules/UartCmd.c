@@ -22,13 +22,13 @@
  */
 
 static bool gUartEnabled;
-static const CmdNode_t gUartMenu;
+static const Cmd_Node_t gUartMenu;
 
 /*
  * PUBLIC FUNCTIONS
  */
 
-const CmdNode_t * UARTCMD_InitMenu(void)
+const Cmd_Node_t * UARTCMD_InitMenu(void)
 {
 	gUartEnabled = false;
 	return &gUartMenu;
@@ -42,14 +42,14 @@ const CmdNode_t * UARTCMD_InitMenu(void)
  * FUNCITON NODES
  */
 
-static const CmdArg_t gUartInitArgs[] = {
+static const Cmd_Arg_t gUartInitArgs[] = {
 	{
 		.name = "baud",
-		.type = CmdArg_Number,
+		.type = Cmd_Arg_Number,
 	}
 };
 
-static void UARTCMD_Init(CmdLine_t * line, CmdArgValue_t * argv)
+static void UARTCMD_Init(Cmd_Line_t * line, Cmd_ArgValue_t * argv)
 {
 	uint32_t baudrate = argv[0].number;
 
@@ -63,8 +63,8 @@ static void UARTCMD_Init(CmdLine_t * line, CmdArgValue_t * argv)
 	COMCMD_PrintOk(line);
 }
 
-static const CmdNode_t gUartInitNode = {
-	.type = CmdNode_Function,
+static const Cmd_Node_t gUartInitNode = {
+	.type = Cmd_Node_Function,
 	.name = "init",
 	.func = {
 		.args = gUartInitArgs,
@@ -73,7 +73,7 @@ static const CmdNode_t gUartInitNode = {
 	}
 };
 
-static void UARTCMD_Deinit(CmdLine_t * line, CmdArgValue_t * argv)
+static void UARTCMD_Deinit(Cmd_Line_t * line, Cmd_ArgValue_t * argv)
 {
 	if (gUartEnabled)
 	{
@@ -83,8 +83,8 @@ static void UARTCMD_Deinit(CmdLine_t * line, CmdArgValue_t * argv)
 	COMCMD_PrintOk(line);
 }
 
-static const CmdNode_t gUartDeinitNode = {
-	.type = CmdNode_Function,
+static const Cmd_Node_t gUartDeinitNode = {
+	.type = Cmd_Node_Function,
 	.name = "deinit",
 	.func = {
 		.arglen = 0,
@@ -92,14 +92,14 @@ static const CmdNode_t gUartDeinitNode = {
 	}
 };
 
-static const CmdArg_t gUartWriteArgs[] = {
+static const Cmd_Arg_t gUartWriteArgs[] = {
 	{
 		.name = "payload",
-		.type = CmdArg_Bytes,
+		.type = Cmd_Arg_Bytes,
 	}
 };
 
-static void UARTCMD_Write(CmdLine_t * line, CmdArgValue_t * argv)
+static void UARTCMD_Write(Cmd_Line_t * line, Cmd_ArgValue_t * argv)
 {
 	if (!gUartEnabled)
 	{
@@ -107,13 +107,13 @@ static void UARTCMD_Write(CmdLine_t * line, CmdArgValue_t * argv)
 		return;
 	}
 
-	CmdArgValue_t * data = &argv[0];
+	Cmd_ArgValue_t * data = &argv[0];
 	UART_Write(BUS_UART, data->bytes.data, data->bytes.size);
 	COMCMD_PrintWritten(line, data->bytes.size);
 }
 
-static const CmdNode_t gUartWriteNode = {
-	.type = CmdNode_Function,
+static const Cmd_Node_t gUartWriteNode = {
+	.type = Cmd_Node_Function,
 	.name = "write",
 	.func = {
 		.args = gUartWriteArgs,
@@ -122,14 +122,14 @@ static const CmdNode_t gUartWriteNode = {
 	}
 };
 
-static const CmdArg_t gUartReadArgs[] = {
+static const Cmd_Arg_t gUartReadArgs[] = {
 	{
 		.name = "count",
-		.type = CmdArg_Number | CmdArg_Optional,
+		.type = Cmd_Arg_Number | Cmd_Arg_Optional,
 	}
 };
 
-static void UARTCMD_Read(CmdLine_t * line, CmdArgValue_t * argv)
+static void UARTCMD_Read(Cmd_Line_t * line, Cmd_ArgValue_t * argv)
 {
 	if (!gUartEnabled)
 	{
@@ -148,8 +148,8 @@ static void UARTCMD_Read(CmdLine_t * line, CmdArgValue_t * argv)
 	COMCMD_PrintRead(line, data, read);
 }
 
-static const CmdNode_t gUartReadNode = {
-	.type = CmdNode_Function,
+static const Cmd_Node_t gUartReadNode = {
+	.type = Cmd_Node_Function,
 	.name = "read",
 	.func = {
 		.args = gUartReadArgs,
@@ -158,7 +158,7 @@ static const CmdNode_t gUartReadNode = {
 	}
 };
 
-static void UARTCMD_Ready(CmdLine_t * line, CmdArgValue_t * argv)
+static void UARTCMD_Ready(Cmd_Line_t * line, Cmd_ArgValue_t * argv)
 {
 	if (!gUartEnabled)
 	{
@@ -167,11 +167,11 @@ static void UARTCMD_Ready(CmdLine_t * line, CmdArgValue_t * argv)
 	}
 
 	uint32_t ready = UART_ReadCount(BUS_UART);
-	Cmd_Printf(line, CmdReply_Info, "%d bytes ready\r\n", ready);
+	Cmd_Printf(line, Cmd_Reply_Info, "%d bytes ready\r\n", ready);
 }
 
-static const CmdNode_t gUartReadyNode = {
-	.type = CmdNode_Function,
+static const Cmd_Node_t gUartReadyNode = {
+	.type = Cmd_Node_Function,
 	.name = "ready",
 	.func = {
 		.arglen = 0,
@@ -179,7 +179,7 @@ static const CmdNode_t gUartReadyNode = {
 	}
 };
 
-static const CmdNode_t * gUartFunctions[] = {
+static const Cmd_Node_t * gUartFunctions[] = {
 		&gUartInitNode,
 		&gUartDeinitNode,
 		&gUartWriteNode,
@@ -187,8 +187,8 @@ static const CmdNode_t * gUartFunctions[] = {
 		&gUartReadyNode,
 };
 
-static const CmdNode_t gUartMenu = {
-	.type = CmdNode_Menu,
+static const Cmd_Node_t gUartMenu = {
+	.type = Cmd_Node_Menu,
 	.name = "uart",
 	.menu = {
 		.nodes = gUartFunctions,

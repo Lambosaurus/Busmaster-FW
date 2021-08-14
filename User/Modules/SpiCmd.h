@@ -1,8 +1,8 @@
 #ifndef SPICMD_H
 #define SPICMD_H
 
+#include "Cmd.h"
 #include "STM32X.h"
-#include "Command.h"
 
 /*
  * PUBLIC DEFINITIONS
@@ -16,6 +16,6 @@
  * PUBLIC FUNCTIONS
  */
 
-const CmdNode_t * SPICMD_InitMenu(void);
+const Cmd_Node_t * SPICMD_InitMenu(void);
 
 #endif //SPICMD_H

@@ -28,13 +28,13 @@ static void Config_Save(void);
  */
 
 Config_t gConfig;
-static const CmdNode_t gConfigMenu;
+static const Cmd_Node_t gConfigMenu;
 
 /*
  * PUBLIC FUNCTIONS
  */
 
-const CmdNode_t * CONFIGCMD_InitMenu(void)
+const Cmd_Node_t * CONFIGCMD_InitMenu(void)
 {
 	if (!Config_Load())
 	{
@@ -88,14 +88,14 @@ static void Config_Save(void)
  * FUNCTION NODES
  */
 
-static const CmdArg_t gConfigFormatArgs[] = {
+static const Cmd_Arg_t gConfigFormatArgs[] = {
 	{
-		.type = CmdArg_String,
+		.type = Cmd_Arg_String,
 		.name = "delimiter",
 	}
 };
 
-static void CONFIGCMD_Format(CmdLine_t * line, CmdArgValue_t * args)
+static void CONFIGCMD_Format(Cmd_Line_t * line, Cmd_ArgValue_t * args)
 {
 	const char * fmt = args[0].str;
 
@@ -152,13 +152,13 @@ static void CONFIGCMD_Format(CmdLine_t * line, CmdArgValue_t * args)
 	}
 	else
 	{
-		Cmd_Prints(line, CmdReply_Warn, "Format specifiers is a bit goofy. Ask tim for now.\r\n");
-		Cmd_Prints(line, CmdReply_Error, "Note: \"'s or ['s will be needed to permit argument parsing.\r\n");
+		Cmd_Prints(line, Cmd_Reply_Warn, "Format specifiers is a bit goofy. Ask tim for now.\r\n");
+		Cmd_Prints(line, Cmd_Reply_Error, "Note: \"'s or ['s will be needed to permit argument parsing.\r\n");
 	}
 }
 
-static const CmdNode_t gConfigFormatNode = {
-	.type = CmdNode_Function,
+static const Cmd_Node_t gConfigFormatNode = {
+	.type = Cmd_Node_Function,
 	.name = "format",
 	.func = {
 		.arglen = LENGTH(gConfigFormatArgs),
@@ -167,22 +167,22 @@ static const CmdNode_t gConfigFormatNode = {
 	}
 };
 
-static const CmdArg_t gConfigEnableArgs[] = {
+static const Cmd_Arg_t gConfigEnableArgs[] = {
 	{
-		.type = CmdArg_Bool,
+		.type = Cmd_Arg_Bool,
 		.name = "enable",
 	}
 };
 
-static void CONFIGCMD_Echo(CmdLine_t * line, CmdArgValue_t * args)
+static void CONFIGCMD_Echo(Cmd_Line_t * line, Cmd_ArgValue_t * args)
 {
 	bool enable = args[0].boolean;
 	gConfig.echo = enable;
 	COMCMD_PrintOk(line);
 }
 
-static const CmdNode_t gConfigEchoNode = {
-	.type = CmdNode_Function,
+static const Cmd_Node_t gConfigEchoNode = {
+	.type = Cmd_Node_Function,
 	.name = "echo",
 	.func = {
 		.arglen = LENGTH(gConfigEnableArgs),
@@ -191,15 +191,15 @@ static const CmdNode_t gConfigEchoNode = {
 	}
 };
 
-static void CONFIGCMD_Color(CmdLine_t * line, CmdArgValue_t * args)
+static void CONFIGCMD_Color(Cmd_Line_t * line, Cmd_ArgValue_t * args)
 {
 	bool enable = args[0].boolean;
 	gConfig.color = enable;
 	COMCMD_PrintOk(line);
 }
 
-static const CmdNode_t gConfigColorNode = {
-	.type = CmdNode_Function,
+static const Cmd_Node_t gConfigColorNode = {
+	.type = Cmd_Node_Function,
 	.name = "color",
 	.func = {
 		.arglen = LENGTH(gConfigEnableArgs),
@@ -208,15 +208,15 @@ static const CmdNode_t gConfigColorNode = {
 	}
 };
 
-static void CONFIGCMD_Bell(CmdLine_t * line, CmdArgValue_t * args)
+static void CONFIGCMD_Bell(Cmd_Line_t * line, Cmd_ArgValue_t * args)
 {
 	bool enable = args[0].boolean;
 	gConfig.bell = enable;
 	COMCMD_PrintOk(line);
 }
 
-static const CmdNode_t gConfigBellNode = {
-	.type = CmdNode_Function,
+static const Cmd_Node_t gConfigBellNode = {
+	.type = Cmd_Node_Function,
 	.name = "bell",
 	.func = {
 		.arglen = LENGTH(gConfigEnableArgs),
@@ -225,15 +225,15 @@ static const CmdNode_t gConfigBellNode = {
 	}
 };
 
-static void CONFIGCMD_DefaultVout(CmdLine_t * line, CmdArgValue_t * args)
+static void CONFIGCMD_DefaultVout(Cmd_Line_t * line, Cmd_ArgValue_t * args)
 {
 	bool enable = args[0].boolean;
 	gConfig.default_vout = enable;
 	COMCMD_PrintOk(line);
 }
 
-static const CmdNode_t gConfigDefaultVoutNode = {
-	.type = CmdNode_Function,
+static const Cmd_Node_t gConfigDefaultVoutNode = {
+	.type = Cmd_Node_Function,
 	.name = "boot-vout",
 	.func = {
 		.arglen = LENGTH(gConfigEnableArgs),
@@ -242,7 +242,7 @@ static const CmdNode_t gConfigDefaultVoutNode = {
 	}
 };
 
-static void CONFIGCMD_Load(CmdLine_t * line, CmdArgValue_t * args)
+static void CONFIGCMD_Load(Cmd_Line_t * line, Cmd_ArgValue_t * args)
 {
 	if (Config_Load())
 	{
@@ -254,8 +254,8 @@ static void CONFIGCMD_Load(CmdLine_t * line, CmdArgValue_t * args)
 	}
 }
 
-static const CmdNode_t gConfigLoadNode = {
-	.type = CmdNode_Function,
+static const Cmd_Node_t gConfigLoadNode = {
+	.type = Cmd_Node_Function,
 	.name = "load",
 	.func = {
 		.arglen = 0,
@@ -263,14 +263,14 @@ static const CmdNode_t gConfigLoadNode = {
 	}
 };
 
-static void CONFIGCMD_Save(CmdLine_t * line, CmdArgValue_t * args)
+static void CONFIGCMD_Save(Cmd_Line_t * line, Cmd_ArgValue_t * args)
 {
 	Config_Save();
 	COMCMD_PrintOk(line);
 }
 
-static const CmdNode_t gConfigSaveNode = {
-	.type = CmdNode_Function,
+static const Cmd_Node_t gConfigSaveNode = {
+	.type = Cmd_Node_Function,
 	.name = "save",
 	.func = {
 		.arglen = 0,
@@ -278,14 +278,14 @@ static const CmdNode_t gConfigSaveNode = {
 	}
 };
 
-static void CONFIGCMD_Default(CmdLine_t * line, CmdArgValue_t * args)
+static void CONFIGCMD_Default(Cmd_Line_t * line, Cmd_ArgValue_t * args)
 {
 	Config_Default();
 	COMCMD_PrintOk(line);
 }
 
-static const CmdNode_t gConfigDefaultNode = {
-	.type = CmdNode_Function,
+static const Cmd_Node_t gConfigDefaultNode = {
+	.type = Cmd_Node_Function,
 	.name = "default",
 	.func = {
 		.arglen = 0,
@@ -293,7 +293,7 @@ static const CmdNode_t gConfigDefaultNode = {
 	}
 };
 
-static const CmdNode_t * gConfigSetItems[] =
+static const Cmd_Node_t * gConfigSetItems[] =
 {
 	&gConfigFormatNode,
 	&gConfigEchoNode,
@@ -302,9 +302,9 @@ static const CmdNode_t * gConfigSetItems[] =
 	&gConfigDefaultVoutNode,
 };
 
-static const CmdNode_t gConfigSetMenu =
+static const Cmd_Node_t gConfigSetMenu =
 {
-	.type = CmdNode_Menu,
+	.type = Cmd_Node_Menu,
 	.name = "set",
 	.menu = {
 		.count = LENGTH(gConfigSetItems),
@@ -312,7 +312,7 @@ static const CmdNode_t gConfigSetMenu =
 	}
 };
 
-static const CmdNode_t * gConfigItems[] =
+static const Cmd_Node_t * gConfigItems[] =
 {
 	&gConfigSetMenu,
 	&gConfigLoadNode,
@@ -320,9 +320,9 @@ static const CmdNode_t * gConfigItems[] =
 	&gConfigDefaultNode,
 };
 
-static const CmdNode_t gConfigMenu =
+static const Cmd_Node_t gConfigMenu =
 {
-	.type = CmdNode_Menu,
+	.type = Cmd_Node_Menu,
 	.name = "config",
 	.menu = {
 		.count = LENGTH(gConfigItems),

@@ -1,8 +1,8 @@
 #ifndef UARTCMD_H
 #define UARTCMD_H
 
+#include "Cmd.h"
 #include "STM32X.h"
-#include "Command.h"
 
 /*
  * PUBLIC DEFINITIONS
@@ -16,6 +16,6 @@
  * PUBLIC FUNCTIONS
  */
 
-const CmdNode_t * UARTCMD_InitMenu(void);
+const Cmd_Node_t * UARTCMD_InitMenu(void);
 
 #endif //UARTCMD_H

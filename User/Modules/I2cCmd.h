@@ -1,8 +1,8 @@
 #ifndef I2CCMD_H
 #define I2CCMD_H
 
+#include "Cmd.h"
 #include "STM32X.h"
-#include "Command.h"
 
 /*
  * PUBLIC DEFINITIONS
@@ -16,6 +16,6 @@
  * PUBLIC FUNCTIONS
  */
 
-const CmdNode_t * I2CCMD_InitMenu(void);
+const Cmd_Node_t * I2CCMD_InitMenu(void);
 
 #endif //I2CCMD_H

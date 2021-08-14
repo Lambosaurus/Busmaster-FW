@@ -1,10 +1,10 @@
 
+#include "Cmd.h"
 #include "Core.h"
 #include "GPIO.h"
 #include "USB.h"
 #include "ADC.h"
 
-#include "Command.h"
 #include "Modules\I2cCmd.h"
 #include "Modules\SpiCmd.h"
 #include "Modules\UartCmd.h"
@@ -13,10 +13,10 @@
 #include "Modules\AuxCmds.h"
 
 
-static const CmdNode_t * gRootItems[8];
+static const Cmd_Node_t * gRootItems[8];
 
-static const CmdNode_t gRootMenu = {
-	.type = CmdNode_Menu,
+static const Cmd_Node_t gRootMenu = {
+	.type = Cmd_Node_Menu,
 	.name = "root",
 	.menu = {
 		.nodes = gRootItems,
@@ -55,10 +55,11 @@ int main(void)
 	gRootItems[6] = AUXCMD_InitVref();
 	gRootItems[7] = AUXCMD_InitTemp();
 
-	CmdLine_t line;
+	Cmd_Line_t line;
 	Cmd_Init(&line, &gRootMenu, USB_Write, (void*)gMemory, sizeof(gMemory));
-
+	line.cfg.prompt = true;
 	USB_Init();
+	Cmd_Start(&line);
 
 	MAIN_LedGrn();
 	while(1)

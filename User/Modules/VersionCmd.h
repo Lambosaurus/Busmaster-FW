@@ -1,8 +1,8 @@
 #ifndef VERSIONCMD_H
 #define VERSIONCMD_H
 
+#include "Cmd.h"
 #include "STM32X.h"
-#include "Command.h"
 
 /*
  * PUBLIC DEFINITIONS
@@ -16,6 +16,6 @@
  * PUBLIC FUNCTIONS
  */
 
-const CmdNode_t * VERSIONCMD_InitMenu(void);
+const Cmd_Node_t * VERSIONCMD_InitMenu(void);
 
 #endif //VERSIONCMD_H

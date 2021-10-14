@@ -58,7 +58,7 @@ static void UARTCMD_Init(Cmd_Line_t * line, Cmd_ArgValue_t * argv)
 		UART_Deinit(BUS_UART);
 	}
 
-	UART_Init(BUS_UART, baudrate);
+	UART_Init(BUS_UART, baudrate, UART_Mode_Default);
 	gUartEnabled = true;
 	COMCMD_PrintOk(line);
 }

@@ -76,5 +76,7 @@
 #define BUS_I2C			I2C_1
 #define BUS_UART		UART_2
 
+#define BC660_UART		BUS_UART
+
 
 #endif /* BOARD_H */

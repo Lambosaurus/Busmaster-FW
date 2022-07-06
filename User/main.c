@@ -39,11 +39,26 @@ int main(void)
 	MAIN_LedGrn();
 	while(1)
 	{
-		bool connected = BC660_IsConnected();
+		static bool once = true;
 
-		char bfr[64];
-		snprintf(bfr, sizeof(bfr), "Connected: %d\r\n", connected);
-		USB_CDC_WriteStr(bfr);
+		if (once && BC660_IsConnected())
+		{
+			once = false;
+
+			if (BC660_UDP_Open("vm.tlembedded.com", 11001, 11002))
+			{
+				uint8_t msg[] = { 0x01, 0x02, 0x03, 0x04 };
+				if (BC660_UDP_Write(msg, sizeof(msg)))
+				{
+					USB_CDC_WriteStr("Send ok\r\n");
+				}
+			}
+			if (BC660_UDP_Close())
+			{
+				USB_CDC_WriteStr("Close ok\r\n");
+			}
+
+		}
 
 		CORE_Delay(1000);
 	}

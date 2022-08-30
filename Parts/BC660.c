@@ -11,7 +11,8 @@
  * PRIVATE DEFINITIONS
  */
 
-#define BC660_RETRIES	3
+#define BC660_RETRIES		3
+#define BC660_BFR_SIZE		((BC660_MAX_PACKET * 2) + 64)
 
 /*
  * PRIVATE TYPES
@@ -46,7 +47,8 @@ static const char * BC660_ReadLine(uint32_t timeout, const char * prefix);
 static const char * BC660_FindChar(const char * str, char ch);
 static void BC660_GetPrefix(const char * fmt, char * bfr, uint32_t bfr_size);
 static uint32_t BC660_CountArgs(const char * fmt);
-
+static uint32_t BC660_EncodeHex(char * str, const uint8_t * data, uint32_t size);
+static uint32_t BC660_DecodeHex(const char * str, uint8_t * data, uint32_t size);
 
 /*
  * PRIVATE VARIABLES
@@ -55,7 +57,7 @@ static uint32_t BC660_CountArgs(const char * fmt);
 static struct {
 	struct {
 		Line_t line;
-		char bfr[128];
+		char bfr[BC660_BFR_SIZE];
 	} rx;
 } gBC660;
 
@@ -75,7 +77,6 @@ bool BC660_Init(void)
 
 	// Put it into binary mode.
 	success &= BC660_Set("+QICFG=\"dataformat\",1,1", 500);
-
 	return success;
 }
 
@@ -105,17 +106,19 @@ bool BC660_UDP_Open(const char * addr, uint16_t remote_port, uint16_t local_port
 {
 	if (BC660_Wake())
 	{
-		char bfr[256];
-		snprintf(bfr, sizeof(bfr), "+QIOPEN=0,1,\"UDP\",\"%s\",%d,%d", addr, (int)remote_port, (int)local_port);
+		// +QIOPEN=<context>,<id>,"UDP","<addr>",<remote>,<local>
+		char bfr[BC660_BFR_SIZE];
+		snprintf(bfr, sizeof(bfr), "+QIOPEN=0,0,\"UDP\",\"%s\",%d,%d", addr, (int)remote_port, (int)local_port);
+
 		if (BC660_Set(bfr, 500))
 		{
 			// Command will return OK immediately.
 
-			// +QIOPEN: 0,0
+			// +QIOPEN: <id>,<err>
 			int id, err;
 			if (BC660_Scan(10000, "+QIOPEN: %d,%d", &id, &err))
 			{
-				if (id == 1 && err == 0)
+				if (id == 0 && err == 0)
 				{
 					return true;
 				}
@@ -127,19 +130,47 @@ bool BC660_UDP_Open(const char * addr, uint16_t remote_port, uint16_t local_port
 
 bool BC660_UDP_Write(const uint8_t * data, uint32_t size)
 {
-	return true;
+	if (BC660_Wake())
+	{
+		// AT+QISEND=<id>,<size>,"<data>"
+		char bfr[BC660_BFR_SIZE];
+		char * head = bfr;
+		head += snprintf(head, sizeof(bfr), "+QISEND=0,%d,\"", (int)size);
+		head += BC660_EncodeHex(head, data, size);
+		*head++ = '"';
+		*head++ = 0;
+
+		if (BC660_Set(bfr, 250) && BC660_Scan(1000, "SEND OK"))
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
-uint32_t BC660_UDP_Read(uint8_t * data, uint32_t size)
+uint32_t BC660_UDP_Read(uint8_t * data, uint32_t size, uint32_t timeout)
 {
-	return true;
+	if (BC660_Wake())
+	{
+		// +QIURC: "recv",<id>,<size>,"<data>"
+
+		int rx_size;
+		char payload[BC660_BFR_SIZE];
+		if (BC660_Scan(timeout, "+QIURC: \"recv\",0,%d,\"%256s", &rx_size, payload) && rx_size <= size)
+		{
+			BC660_DecodeHex(payload, data, rx_size);
+			return rx_size;
+		}
+	}
+	return 0;
 }
 
 bool BC660_UDP_Close(void)
 {
 	if (BC660_Wake())
 	{
-		if (BC660_Set("+QICLOSE=1", 250) && BC660_Scan(1000, "CLOSE OK"))
+		// +QICLOSE=<id>
+		if (BC660_Set("+QICLOSE=0", 250) && BC660_Scan(1000, "CLOSE OK"))
 		{
 			return true;
 		}
@@ -148,23 +179,61 @@ bool BC660_UDP_Close(void)
 }
 
 /*
-AT+QICFG="dataformat",1,1
-OK
-AT+QIOPEN=0,0,"UDP","ec2-3-26-186-18.ap-southeast-2.compute.amazonaws.com",11001
-OK
-+QIOPEN: 0,0
-AT+QISEND=0,4,"01020304"
-OK
-SEND OK
-+QIURC: "recv",0,2,"4f4b"
-AT+QICLOSE=1
-OK
-CLOSE OK
-*/
-
-/*
  * PRIVATE FUNCTIONS
  */
+
+static char BC660_NibbleToHex(uint32_t n)
+{
+	if (n < 0xA)
+	{
+		return '0' + n;
+	}
+	else
+	{
+		return 'a' + n - 0xA;
+	}
+}
+
+static uint8_t BC660_HexToNibble(char ch)
+{
+	if (ch <= '9')
+	{
+		return ch - '0';
+	}
+	else
+	{
+		ch |= 'A' ^ 'a'; // Converts to lower
+		return ch - 'a' + 0xA;
+	}
+}
+
+// Returns bytes written
+static uint32_t BC660_EncodeHex(char * str, const uint8_t * data, uint32_t size)
+{
+	char * start = str;
+	while (size--)
+	{
+		uint32_t byte = *data++;
+		*str++ = BC660_NibbleToHex(byte >> 4);
+		*str++ = BC660_NibbleToHex(byte & 0xF);
+	}
+	*str = 0;
+	return str - start;
+}
+
+// Returns bytes read
+static uint32_t BC660_DecodeHex(const char * str, uint8_t * data, uint32_t size)
+{
+	const char * start = str;
+	while (size--)
+	{
+		uint32_t byte = 0;
+		byte |= BC660_HexToNibble(*str++) << 4;
+		byte |= BC660_HexToNibble(*str++);
+		*data++ = byte;
+	}
+	return str - start;
+}
 
 static bool BC660_ReadSignalQuality(uint8_t * pct)
 {
